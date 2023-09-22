@@ -149,12 +149,20 @@ describe('DomainRegistry', function() {
       it('Should revert with the right error if wrong owner', async function() {
         const { contract, lockAmount, otherAccount } = await loadFixture(deployOneYearLockFixture);
 
-
         const { domain } = await successReserveDomain({ contract, lockAmount });
 
         await expect(contract.connect(otherAccount).removeReservationDomain(domain)).to.be.revertedWith('wrong sender');
 
         expect(await contract.checkIsFreeDomain(domain)).to.be.false;
+      });
+
+      it('Should fail second try remove request', async function() {
+        const { contract, lockAmount } = await loadFixture(deployOneYearLockFixture);
+
+        const { domain } = await successReserveDomain({ contract, lockAmount });
+
+        await expect(contract.removeReservationDomain(domain)).not.to.be.reverted;
+        await expect(contract.removeReservationDomain(domain)).to.be.reverted;
       });
 
     });
