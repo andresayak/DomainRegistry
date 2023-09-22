@@ -18,8 +18,7 @@ describe('DomainRegistry', function() {
     return { contract, lockAmount, owner, otherAccount };
   };
 
-  const successReserveDomain = async ({ contract, lockAmount }) => {
-    const domain = faker.internet.domainSuffix();
+  const successReserveDomain = async ({ contract, lockAmount, domain = faker.internet.domainSuffix() }) => {
     const ipv4 = faker.internet.ipv4();
 
     expect(await contract.checkIsFreeDomain(domain)).to.be.true;
@@ -66,6 +65,12 @@ describe('DomainRegistry', function() {
 
         expect(await contract.checkIsFreeDomain(domain)).to.be.false;
         expect(await contract.resolveIp(domain)).to.be.equal(ipv4);
+      });
+
+      it('Should reserve many domains', async function() {
+        const { contract, lockAmount } = await loadFixture(deployOneYearLockFixture);
+        await successReserveDomain({contract, lockAmount, domain: 'aaa'});
+        await successReserveDomain({contract, lockAmount, domain: 'bbb'});
       });
 
       it('Should revert with the right error if domain empty', async function() {
