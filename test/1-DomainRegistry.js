@@ -1,8 +1,7 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
-
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+const { successReserveDomain, ZERO_ADDRESS } = require('./utils');
 
 describe('DomainRegistry', function () {
   let contract, owner, otherAccount;
@@ -11,23 +10,9 @@ describe('DomainRegistry', function () {
   const deployContract = async () => {
     [owner, otherAccount] = await ethers.getSigners();
 
-    const Contract = await ethers.getContractFactory('DomainRegistry');
-    contract = await Contract.deploy(lockAmount);
+    contract = await (await ethers.getContractFactory('DomainRegistry')).deploy(lockAmount);
 
     return { contract, lockAmount, owner, otherAccount };
-  };
-
-  const successReserveDomain = async ({ contract, lockAmount, domain }) => {
-    expect(await contract.checkIsFreeDomain(domain)).to.be.true;
-
-    await expect(
-      contract.reserveDomain(domain, {
-        value: lockAmount,
-      }),
-    ).not.to.be.reverted;
-    return {
-      domain,
-    };
   };
 
   beforeEach(async () => loadFixture(deployContract));
@@ -61,6 +46,10 @@ describe('DomainRegistry', function () {
         await successReserveDomain({ contract, lockAmount, domain: 'bbb' });
       });
 
+      it('Should reserve domain with prefix', async function () {
+        await successReserveDomain({ contract, lockAmount, domain: 'https://aaa' });
+      });
+
       it('Should revert with the right error if domain empty', async function () {
         const domain = '';
 
@@ -69,16 +58,6 @@ describe('DomainRegistry', function () {
             value: lockAmount,
           }),
         ).to.be.revertedWith('empty domain');
-      });
-
-      it('Should revert with the right error if domain format wrong', async function () {
-        const domain = 'bbb.aaa';
-
-        await expect(
-          contract.reserveDomain(domain, {
-            value: lockAmount,
-          }),
-        ).to.be.revertedWith('wrong domain format');
       });
 
       it('Should revert with the right error if wrong funds', async function () {
