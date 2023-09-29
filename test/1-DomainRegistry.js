@@ -145,6 +145,34 @@ describe('DomainRegistry', function () {
       });
 
       it('Should fetch right ordered list', async function () {
+        expect(await contract.getDomainsCount()).to.be.equal(3);
+        expect(await contract.getDomainsWithPagination(1, 2)).to.have.ordered.members([domain1, domain2]);
+        expect(await contract.getDomainsWithPagination(2, 2)).to.have.ordered.members([domain3]);
+      });
+
+      it('Should fetch true list after remove last in list domain', async function () {
+        await expect(contract.removeReservationDomain(domain3)).not.to.be.reverted;
+        expect(await contract.getDomainsCount()).to.be.equal(2);
+        expect(await contract.getDomainsWithPagination(1, 2)).to.have.ordered.members([domain1, domain2]);
+      });
+
+      it('Should fetch true list after remove first in list domain', async function () {
+        await expect(contract.removeReservationDomain(domain1)).not.to.be.reverted;
+        expect(await contract.getDomainsCount()).to.be.equal(2);
+        expect(await contract.getDomainsWithPagination(1, 2)).to.have.ordered.members([domain3, domain2]);
+      });
+    });
+
+    describe('Domains pagination by owner', function () {
+      const [domain1, domain2, domain3] = ['aaa', 'bbb', 'ccc'];
+
+      beforeEach(async () => {
+        await successReserveDomain({ contract, lockAmount, domain: domain1 });
+        await successReserveDomain({ contract, lockAmount, domain: domain2 });
+        await successReserveDomain({ contract, lockAmount, domain: domain3 });
+      });
+
+      it('Should fetch right ordered list', async function () {
         expect(await contract.getDomainsCountByOwner(owner)).to.be.equal(3);
         expect(await contract.getDomainsByOwnerWithPagination(owner, 1, 2)).to.have.ordered.members([domain1, domain2]);
         expect(await contract.getDomainsByOwnerWithPagination(owner, 2, 2)).to.have.ordered.members([domain3]);
