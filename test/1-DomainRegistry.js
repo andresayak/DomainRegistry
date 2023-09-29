@@ -2,6 +2,8 @@ const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helper
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+
 describe('DomainRegistry', function () {
   let contract, owner, otherAccount;
   const lockAmount = 1_000_000_000;
@@ -51,6 +53,7 @@ describe('DomainRegistry', function () {
         expect(await ethers.provider.getBalance(contract.target)).to.equal(lockAmount);
 
         expect(await contract.checkIsFreeDomain(domain)).to.be.false;
+        expect(await contract.domainOwner(domain)).to.equal(owner.address);
       });
 
       it('Should reserve many domains', async function () {
@@ -100,6 +103,7 @@ describe('DomainRegistry', function () {
         await expect(tx).to.emit(contract, 'DomainRemoved').withArgs(domain);
 
         expect(await contract.checkIsFreeDomain(domain)).to.be.true;
+        expect(await contract.domainOwner(domain)).to.equal(ZERO_ADDRESS);
         expect(await ethers.provider.getBalance(contract.target)).to.equal(0);
       });
 
