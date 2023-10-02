@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-library Utils {
+library UtilsV1 {
   function parentDomain(string memory _domain) internal pure returns (string memory _parentDomain) {
     bytes memory _domainBytes = bytes(_domain);
     bytes memory _dotBytes = bytes('.');

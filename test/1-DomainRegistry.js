@@ -22,7 +22,7 @@ describe('DomainRegistry', function () {
       expect(await contract.reservationDeposit()).to.equal(lockAmount);
     });
 
-    it.only('Should set the new right deposit amount', async function () {
+    it('Should set the new right deposit amount', async function () {
       const newLockAmount = lockAmount + 1;
       await expect(contract.changeReservationDeposit(newLockAmount)).to.emit(contract, 'ReservationDepositChanged').withArgs(newLockAmount);
       expect(await contract.reservationDeposit()).to.equal(newLockAmount);
