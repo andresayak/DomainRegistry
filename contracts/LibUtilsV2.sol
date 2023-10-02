@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
-import 'hardhat/console.sol';
 
 library Utils {
   function parentDomain(string memory _domain) internal pure returns (string memory _parentDomain) {

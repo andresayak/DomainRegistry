@@ -1,16 +1,18 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
-import './LibUtils.sol';
+import './LibUtilsV2.sol';
 
 struct DomainRecord {
   address owner;
+  uint deposit;
   uint ownerIndex;
   uint globalIndex;
   uint parentIndex;
 }
 
 contract DomainRegistry {
+  address public owner;
   uint public reservationDeposit;
   bool internal locked;
   string[] internal domains;
@@ -25,16 +27,28 @@ contract DomainRegistry {
     locked = false;
   }
 
-  modifier onlyOwner(string memory _domain) {
+  modifier onlyDomainOwner(string memory _domain) {
     require(registryByName[_domain].owner == msg.sender, 'wrong sender');
+    _;
+  }
+
+  modifier onlyOwner() {
+    require(owner == msg.sender, 'only owner');
     _;
   }
 
   event DomainReserved(address indexed sender, string domain);
   event DomainRemoved(string domain);
+  event ReservationDepositChanged(uint amount);
 
   constructor(uint _reservationDeposit) {
     reservationDeposit = _reservationDeposit;
+    owner = msg.sender;
+  }
+
+  function changeReservationDeposit(uint _reservationDeposit) external onlyOwner{
+    reservationDeposit = _reservationDeposit;
+    emit ReservationDepositChanged(_reservationDeposit);
   }
 
   function reserveDomain(string memory _domain) external payable {
@@ -46,7 +60,7 @@ contract DomainRegistry {
     require(_checkIsFreeDomain(_domain), 'not free domain');
     require(msg.value == reservationDeposit, 'wrong value');
 
-    registryByName[_domain] = DomainRecord(msg.sender, registryByOwner[msg.sender].length, domains.length, registryByParent[_parentDomain].length);
+    registryByName[_domain] = DomainRecord(msg.sender, msg.value, registryByOwner[msg.sender].length, domains.length, registryByParent[_parentDomain].length);
     registryByOwner[msg.sender].push(_domain);
     registryByParent[_parentDomain].push(_domain);
     domains.push(_domain);
@@ -62,16 +76,18 @@ contract DomainRegistry {
     return registryByName[_domain].owner == address(0);
   }
 
-  function removeReservationDomain(string memory _domain) external noReentrant onlyOwner(_domain) {
+  function removeReservationDomain(string memory _domain) external noReentrant onlyDomainOwner(_domain) {
     _domain = Utils.clearDomain(_domain);
-    string memory _parentDomain = Utils.parentDomain(_domain);
-
-    (bool sent, ) = msg.sender.call{value: reservationDeposit}('');
-    require(sent, 'failed to send Ether');
 
     DomainRecord storage _record = registryByName[_domain];
+
+    (bool sent, ) = msg.sender.call{value: _record.deposit}('');
+    require(sent, 'failed to send Ether');
+
+    string memory _parentDomain = Utils.parentDomain(_domain);
     _clearIndexes(msg.sender, _parentDomain, _record);
-    registryByName[_domain] = DomainRecord(address(0), 0, 0, 0);
+
+    registryByName[_domain] = DomainRecord(address(0), 0, 0, 0, 0);
 
     emit DomainRemoved(_domain);
   }
@@ -84,8 +100,8 @@ contract DomainRegistry {
     return domains.length;
   }
 
-  function getDomainsCountByOwner(address owner) external view returns (uint) {
-    return registryByOwner[owner].length;
+  function getDomainsCountByOwner(address _owner) external view returns (uint) {
+    return registryByOwner[_owner].length;
   }
 
   function getDomainsCountByParent(string memory domain) external view returns (uint) {

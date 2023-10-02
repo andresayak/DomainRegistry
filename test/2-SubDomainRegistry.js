@@ -41,7 +41,8 @@ describe('SubDomainRegistry', function () {
 
       it('Should reserve many sub-domains', async function () {
         await successReserveDomain({ contract, lockAmount, domain: 'aaa.'+parentDomain });
-        await successReserveDomain({ contract, lockAmount, domain: 'bbb.'+parentDomain });
+        await successReserveDomain({ contract, lockAmount, domain: 'bbb.aaa.'+parentDomain });
+        await successReserveDomain({ contract, lockAmount, domain: 'ccc.bbb.aaa.'+parentDomain });
       });
 
       it('Should reserve sub-domain with prefix', async function () {

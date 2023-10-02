@@ -18,8 +18,14 @@ describe('DomainRegistry', function () {
   beforeEach(async () => loadFixture(deployContract));
 
   describe('Deployment', function () {
-    it('Should set the right lockAmount', async function () {
+    it('Should set the right deposit amount', async function () {
       expect(await contract.reservationDeposit()).to.equal(lockAmount);
+    });
+
+    it.only('Should set the new right deposit amount', async function () {
+      const newLockAmount = lockAmount + 1;
+      await expect(contract.changeReservationDeposit(newLockAmount)).to.emit(contract, 'ReservationDepositChanged').withArgs(newLockAmount);
+      expect(await contract.reservationDeposit()).to.equal(newLockAmount);
     });
 
     describe('Adding domain', function () {
