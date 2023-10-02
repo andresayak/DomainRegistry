@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.9;
 
+import './LibUtils.sol';
+
 struct DomainRecord {
   address owner;
   uint ownerIndex;
@@ -9,7 +11,7 @@ struct DomainRecord {
 }
 
 contract DomainRegistry {
-  uint public lockAmount;
+  uint public reservationDeposit;
   bool internal locked;
   string[] internal domains;
   mapping(string => DomainRecord) internal registryByName;
@@ -28,86 +30,47 @@ contract DomainRegistry {
     _;
   }
 
-  event DomainReserved(string domain, address indexed sender);
+  event DomainReserved(address indexed sender, string domain);
   event DomainRemoved(string domain);
 
-  constructor(uint _lockAmount) {
-    lockAmount = _lockAmount;
-  }
-
-  function clearDomain(string memory _domain) internal pure returns (string memory) {
-    bytes memory _domainBytes = bytes(_domain);
-    bytes memory _prefixBytes = bytes('https://');
-    if (_domainBytes.length >= _prefixBytes.length) {
-      bool _found = true;
-      for (uint i = 0; i < _prefixBytes.length; i++) {
-        if (_domainBytes[i] != _prefixBytes[i]) {
-          _found = false;
-          break;
-        }
-      }
-      if (_found) {
-        uint _startIndex = _prefixBytes.length;
-        _domain = string(substr(_domainBytes, _startIndex, _domainBytes.length));
-      }
-    }
-    return _domain;
-  }
-
-  function parentDomain(string memory _domain) public pure returns (string memory _parentDomain) {
-    bytes memory _domainBytes = bytes(_domain);
-    bytes memory _dotBytes = bytes('.');
-
-    require(_domainBytes.length != 0, 'empty domain');
-
-    _parentDomain = '';
-    for (uint i = 0; i < _domainBytes.length; i++) {
-      if (_domainBytes[i] == _dotBytes[0]) {
-        uint _startIndex = i + 1;
-        _parentDomain = string(substr(_domainBytes, _startIndex, _domainBytes.length));
-        break;
-      }
-    }
-  }
-
-  function substr(bytes memory _strBytes, uint _startIndex, uint _endIndex) internal pure returns (bytes memory _result) {
-    _result = new bytes(_endIndex - _startIndex);
-    for (uint _i = _startIndex; _i < _endIndex; _i++) {
-      _result[_i - _startIndex] = _strBytes[_i];
-    }
+  constructor(uint _reservationDeposit) {
+    reservationDeposit = _reservationDeposit;
   }
 
   function reserveDomain(string memory _domain) external payable {
-    _domain = clearDomain(_domain);
-    string memory _parentDomain = parentDomain(_domain);
+    _domain = Utils.clearDomain(_domain);
+    string memory _parentDomain = Utils.parentDomain(_domain);
     if (bytes(_parentDomain).length > 0) {
-      require(!checkIsFreeDomain(_parentDomain), 'parent domain is free');
+      require(!_checkIsFreeDomain(_parentDomain), 'parent domain is free');
     }
-
-    require(checkIsFreeDomain(_domain), 'not free domain');
-    require(msg.value == lockAmount, 'wrong value');
+    require(_checkIsFreeDomain(_domain), 'not free domain');
+    require(msg.value == reservationDeposit, 'wrong value');
 
     registryByName[_domain] = DomainRecord(msg.sender, registryByOwner[msg.sender].length, domains.length, registryByParent[_parentDomain].length);
     registryByOwner[msg.sender].push(_domain);
     registryByParent[_parentDomain].push(_domain);
     domains.push(_domain);
-
-    emit DomainReserved(_domain, msg.sender);
+    emit DomainReserved(msg.sender, _domain);
   }
 
-  function checkIsFreeDomain(string memory _domain) public view returns (bool) {
+  function checkIsFreeDomain(string memory _domain) external view returns (bool) {
+    _domain = Utils.clearDomain(_domain);
+    return _checkIsFreeDomain(_domain);
+  }
+
+  function _checkIsFreeDomain(string memory _domain) public view returns (bool) {
     return registryByName[_domain].owner == address(0);
   }
 
   function removeReservationDomain(string memory _domain) external noReentrant onlyOwner(_domain) {
-    _domain = clearDomain(_domain);
-    string memory _parentDomain = parentDomain(_domain);
+    _domain = Utils.clearDomain(_domain);
+    string memory _parentDomain = Utils.parentDomain(_domain);
 
-    (bool sent, ) = msg.sender.call{value: lockAmount}('');
+    (bool sent, ) = msg.sender.call{value: reservationDeposit}('');
     require(sent, 'failed to send Ether');
 
     DomainRecord storage _record = registryByName[_domain];
-    _clearIndexes(msg.sender, _parentDomain, _record.ownerIndex, _record.globalIndex, _record.parentIndex);
+    _clearIndexes(msg.sender, _parentDomain, _record);
     registryByName[_domain] = DomainRecord(address(0), 0, 0, 0);
 
     emit DomainRemoved(_domain);
@@ -156,25 +119,21 @@ contract DomainRegistry {
     return _pagination(registryByParent[_parent], _page, _limit);
   }
 
-  function _clearIndexes(address _owner, string memory _parent, uint _indexOwner, uint _indexGlobal, uint _indexParent) internal {
-    if (_indexOwner >= registryByOwner[_owner].length) return;
-    if (_indexParent >= registryByParent[_parent].length) return;
-    if (_indexGlobal >= domains.length) return;
-
-    if (registryByOwner[_owner].length > _indexOwner + 1) {
+  function _clearIndexes(address _owner, string memory _parent, DomainRecord storage _record) internal {
+    if (registryByOwner[_owner].length > _record.ownerIndex + 1) {
       string memory updateDomain = registryByOwner[_owner][registryByOwner[_owner].length - 1];
-      registryByOwner[_owner][_indexOwner] = updateDomain;
-      registryByName[updateDomain].ownerIndex = _indexOwner;
+      registryByOwner[_owner][_record.ownerIndex] = updateDomain;
+      registryByName[updateDomain].ownerIndex = _record.ownerIndex;
     }
-    if (registryByParent[_parent].length > _indexParent + 1) {
+    if (registryByParent[_parent].length > _record.parentIndex + 1) {
       string memory updateDomain = registryByParent[_parent][registryByParent[_parent].length - 1];
-      registryByParent[_parent][_indexParent] = updateDomain;
-      registryByName[updateDomain].parentIndex = _indexParent;
+      registryByParent[_parent][_record.parentIndex] = updateDomain;
+      registryByName[updateDomain].parentIndex = _record.parentIndex;
     }
-    if (domains.length > _indexGlobal + 1) {
+    if (domains.length > _record.globalIndex + 1) {
       string memory updateDomain = domains[domains.length - 1];
-      domains[_indexGlobal] = updateDomain;
-      registryByName[updateDomain].globalIndex = _indexGlobal;
+      domains[_record.globalIndex] = updateDomain;
+      registryByName[updateDomain].globalIndex = _record.globalIndex;
     }
     registryByOwner[_owner].pop();
     registryByParent[_parent].pop();

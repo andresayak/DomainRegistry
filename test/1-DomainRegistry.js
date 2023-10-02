@@ -19,7 +19,7 @@ describe('DomainRegistry', function () {
 
   describe('Deployment', function () {
     it('Should set the right lockAmount', async function () {
-      expect(await contract.lockAmount()).to.equal(lockAmount);
+      expect(await contract.reservationDeposit()).to.equal(lockAmount);
     });
 
     describe('Adding domain', function () {
@@ -31,7 +31,7 @@ describe('DomainRegistry', function () {
         const tx = contract.reserveDomain(domain, {
           value: lockAmount,
         });
-        await expect(tx).to.emit(contract, 'DomainReserved').withArgs(domain, owner.address);
+        await expect(tx).to.emit(contract, 'DomainReserved').withArgs(owner.address, domain);
 
         await expect(tx).to.changeEtherBalances([contract, owner], [lockAmount, -lockAmount]);
 
@@ -48,6 +48,14 @@ describe('DomainRegistry', function () {
 
       it('Should reserve domain with prefix', async function () {
         await successReserveDomain({ contract, lockAmount, domain: 'https://aaa' });
+        expect(await contract.domainOwner('https://aaa')).to.equal(ZERO_ADDRESS);
+        expect(await contract.domainOwner('aaa')).to.equal(owner.address);
+      });
+
+      it('Should reserve domain length more prefix', async function () {
+        const domain = 'aaaaaaaaaaaaaaaaaaaa';
+        await successReserveDomain({ contract, lockAmount, domain });
+        expect(await contract.domainOwner(domain)).to.equal(owner.address);
       });
 
       it('Should revert with the right error if domain empty', async function () {

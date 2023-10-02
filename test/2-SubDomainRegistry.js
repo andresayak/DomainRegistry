@@ -31,7 +31,7 @@ describe('SubDomainRegistry', function () {
         const tx = contract.reserveDomain(domain, {
           value: lockAmount,
         });
-        await expect(tx).to.emit(contract, 'DomainReserved').withArgs(domain, owner.address);
+        await expect(tx).to.emit(contract, 'DomainReserved').withArgs(owner.address, domain);
 
         await expect(tx).to.changeEtherBalances([contract, owner], [lockAmount, -lockAmount]);
 
