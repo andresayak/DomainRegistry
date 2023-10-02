@@ -2,7 +2,7 @@ const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helper
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
-describe.only('UtilLib', function () {
+describe('UtilLib', function () {
   let contract, owner, otherAccount;
 
   const deployContract = async () => {
@@ -18,9 +18,9 @@ describe.only('UtilLib', function () {
   describe('Deployment', function () {
     it('Should cut correct text', async function () {
 
-      const text = 'hello';
-      expect(await contract.substrV1(text, 1, 4)).to.emit(contract, 'Test').withArgs('ell');
-      expect(await contract.substrV2(text, 1, 4)).to.emit(contract, 'Test').withArgs('ell');
+      const text = 'hello00000';
+      expect(await contract.substrV1(text, 1, 3)).to.emit(contract, 'Test').withArgs('ell');
+      expect(await contract.substrV2(text, 1, 3)).to.emit(contract, 'Test').withArgs('ell');
     });
   });
 });
