@@ -26,16 +26,16 @@ describe('SubDomainRegistry', function () {
       it('Should reserve sub-domain and store the funds to lock', async function () {
 
         const domain = 'aaa.'+parentDomain;
-        expect(await contract.checkIsFreeDomain(domain)).to.be.true;
+        expect(await contract.isFreeDomain(domain)).to.be.true;
 
         const tx = contract.reserveDomain(domain, {
           value: lockAmount,
         });
-        await expect(tx).to.emit(contract, 'DomainReserved').withArgs(owner.address, domain);
+        await expect(tx).to.emit(contract, 'DomainReserved').withArgs(owner.address, domain, lockAmount);
 
         await expect(tx).to.changeEtherBalances([contract, owner], [lockAmount, -lockAmount]);
 
-        expect(await contract.checkIsFreeDomain(domain)).to.be.false;
+        expect(await contract.isFreeDomain(domain)).to.be.false;
         expect(await contract.domainOwner(domain)).to.equal(owner.address);
       });
 

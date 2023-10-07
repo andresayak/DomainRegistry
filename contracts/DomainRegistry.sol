@@ -37,8 +37,13 @@ contract DomainRegistry {
     _;
   }
 
-  event DomainReserved(address indexed sender, string domain);
-  event DomainRemoved(string domain);
+  modifier onlyRightDepositValue() {
+    require(msg.value == reservationDeposit, 'wrong value');
+    _;
+  }
+
+  event DomainReserved(address indexed sender, string domain, uint deposit);
+  event DomainRemoved(address indexed sender, string domain, uint deposit);
   event ReservationDepositChanged(uint amount);
 
   constructor(uint _reservationDeposit) {
@@ -51,28 +56,26 @@ contract DomainRegistry {
     emit ReservationDepositChanged(_reservationDeposit);
   }
 
-  function reserveDomain(string memory _domain) external payable {
+  function reserveDomain(string memory _domain) external payable onlyRightDepositValue {
     _domain = Utils.clearDomain(_domain);
     string memory _parentDomain = Utils.parentDomain(_domain);
     if (bytes(_parentDomain).length > 0) {
-      require(!_checkIsFreeDomain(_parentDomain), 'parent domain is free');
+      require(!_onlyFreeDomain(_parentDomain), 'parent domain is free');
     }
-    require(_checkIsFreeDomain(_domain), 'not free domain');
-    require(msg.value == reservationDeposit, 'wrong value');
+    require(_onlyFreeDomain(_domain), 'not free domain');
 
     registryByName[_domain] = DomainRecord(msg.sender, msg.value, registryByOwner[msg.sender].length, domains.length, registryByParent[_parentDomain].length);
     registryByOwner[msg.sender].push(_domain);
     registryByParent[_parentDomain].push(_domain);
     domains.push(_domain);
-    emit DomainReserved(msg.sender, _domain);
+    emit DomainReserved(msg.sender, _domain, reservationDeposit);
   }
 
-  function checkIsFreeDomain(string memory _domain) external view returns (bool) {
-    _domain = Utils.clearDomain(_domain);
-    return _checkIsFreeDomain(_domain);
+  function isFreeDomain(string memory _domain) external view returns (bool) {
+    return _onlyFreeDomain(Utils.clearDomain(_domain));
   }
 
-  function _checkIsFreeDomain(string memory _domain) public view returns (bool) {
+  function _onlyFreeDomain(string memory _domain) public view returns (bool) {
     return registryByName[_domain].owner == address(0);
   }
 
@@ -81,7 +84,8 @@ contract DomainRegistry {
 
     DomainRecord storage _record = registryByName[_domain];
 
-    (bool sent, ) = msg.sender.call{value: _record.deposit}('');
+    uint _deposit = _record.deposit;
+    (bool sent, ) = msg.sender.call{value: _deposit}('');
     require(sent, 'failed to send Ether');
 
     string memory _parentDomain = Utils.parentDomain(_domain);
@@ -89,7 +93,7 @@ contract DomainRegistry {
 
     registryByName[_domain] = DomainRecord(address(0), 0, 0, 0, 0);
 
-    emit DomainRemoved(_domain);
+    emit DomainRemoved(msg.sender, _domain, _deposit);
   }
 
   function domainOwner(string memory _domain) external view returns (address) {

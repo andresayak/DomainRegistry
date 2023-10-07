@@ -21,19 +21,21 @@ library UtilsV1 {
 
   function clearDomain(string memory _domain) internal pure returns (string memory) {
     bytes memory _domainBytes = bytes(_domain);
-    bytes memory _prefixBytes = bytes('https://');
+    bytes memory _prefixBytes = bytes('://');
 
     if (_domainBytes.length >= _prefixBytes.length) {
-      bool _found = true;
-      for (uint i = 0; i < _prefixBytes.length; i++) {
-        if (_domainBytes[i] != _prefixBytes[i]) {
-          _found = false;
-          break;
+      for (uint i = 0; i < _domainBytes.length - _prefixBytes.length; i++) {
+        bool _found = true;
+        for (uint j = 0; j < _prefixBytes.length; j++) {
+          if (_domainBytes[i+j] != _prefixBytes[j]) {
+            _found = false;
+            break;
+          }
         }
-      }
-      if (_found) {
-        uint _startIndex = _prefixBytes.length;
-        _domain = string(substr(_domainBytes, _startIndex, _domainBytes.length));
+        if (_found) {
+          uint _startIndex = i + _prefixBytes.length;
+          _domain = string(substr(_domainBytes, _startIndex, _domainBytes.length));
+        }
       }
     }
     return _domain;
