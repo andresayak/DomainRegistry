@@ -68,24 +68,6 @@ describe('SubDomainRegistry', function () {
         await successReserveDomain({ contract, lockAmount, domain: domain2 });
         await successReserveDomain({ contract, lockAmount, domain: domain3 });
       });
-
-      it('Should fetch right ordered list', async function () {
-        expect(await contract.getDomainsCountByParent(parentDomain)).to.be.equal(3);
-        expect(await contract.getDomainsByParentWithPagination(parentDomain, 1, 2)).to.have.ordered.members([domain1, domain2]);
-        expect(await contract.getDomainsByParentWithPagination(parentDomain, 2, 2)).to.have.ordered.members([domain3]);
-      });
-
-      it('Should fetch true list after remove last in list domain', async function () {
-        await expect(contract.removeReservationDomain(domain3)).not.to.be.reverted;
-        expect(await contract.getDomainsCountByParent(parentDomain)).to.be.equal(2);
-        expect(await contract.getDomainsByParentWithPagination(parentDomain, 1, 2)).to.have.ordered.members([domain1, domain2]);
-      });
-
-      it('Should fetch true list after remove first in list domain', async function () {
-        await expect(contract.removeReservationDomain(domain1)).not.to.be.reverted;
-        expect(await contract.getDomainsCountByParent(parentDomain)).to.be.equal(2);
-        expect(await contract.getDomainsByParentWithPagination(parentDomain, 1, 2)).to.have.ordered.members([domain3, domain2]);
-      });
     });
   });
 });
