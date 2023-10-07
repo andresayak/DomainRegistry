@@ -2,6 +2,7 @@
 pragma solidity ^0.8.9;
 
 import './LibUtilsV2.sol';
+//import "hardhat/console.sol";
 
 struct DomainRecord {
   address owner;
@@ -32,7 +33,7 @@ contract DomainRegistry {
     _;
   }
 
-  modifier onlyOwner() {
+  modifier onlyContractOwner() {
     require(owner == msg.sender, 'only owner');
     _;
   }
@@ -51,7 +52,7 @@ contract DomainRegistry {
     owner = msg.sender;
   }
 
-  function changeReservationDeposit(uint _reservationDeposit) external onlyOwner{
+  function changeReservationDeposit(uint _reservationDeposit) external onlyContractOwner{
     reservationDeposit = _reservationDeposit;
     emit ReservationDepositChanged(_reservationDeposit);
   }

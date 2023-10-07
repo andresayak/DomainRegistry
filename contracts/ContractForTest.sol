@@ -7,21 +7,29 @@ import './LibUtilsV2.sol';
 contract ContractForTest {
     event Test(string text);
 
-    function substrV1(string memory _str, uint _startIndex, uint _endIndex) pure external returns (string memory){
+    function substrV1(string memory _str, uint _startIndex, uint _endIndex) external{
         bytes memory _strBytes = bytes(_str);
-        return string(UtilsV1.substr(_strBytes, _startIndex, _endIndex));
+        emit Test(string(UtilsV1.substr(_strBytes, _startIndex, _endIndex)));
     }
 
-    function substrV2(string memory _str, uint _startIndex, uint _endIndex) pure external returns (string memory){
+    function substrV2(string memory _str, uint _startIndex, uint _endIndex) external{
         bytes memory _strBytes = bytes(_str);
-        return string(Utils.substr(_strBytes, _startIndex, _endIndex));
+        emit Test(string(Utils.substr(_strBytes, _startIndex, _endIndex)));
     }
 
-    function clearDomainV1(string memory _domain) pure external returns (string memory){
-        return UtilsV1.clearDomain(_domain);
+    function clearDomainV1(string memory _domain) external{
+        emit Test(UtilsV1.clearDomain(_domain));
     }
 
-    function clearDomainV2(string memory _domain) pure external returns (string memory){
-        return Utils.clearDomain(_domain);
+    function clearDomainV2(string memory _domain) external{
+        emit Test(Utils.clearDomain(_domain));
+    }
+
+    function parentDomainV1(string memory _domain) external{
+        emit Test(UtilsV1.parentDomain(_domain));
+    }
+
+    function parentDomainV2(string memory _domain) external{
+        emit Test(Utils.parentDomain(_domain));
     }
 }
