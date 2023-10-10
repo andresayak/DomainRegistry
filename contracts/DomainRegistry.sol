@@ -33,9 +33,9 @@ contract DomainRegistry {
         _;
     }
 
-    event DomainReserved(address indexed sender, string domain, uint cost, uint createdAt, uint finishedAt);
-    event DomainRemoved(address indexed sender, string domain);
-    event DomainContinue(address indexed sender, string domain, uint cost, uint finishedAt);
+    event DomainReserved(address indexed sender, string indexed domain, uint cost, uint createdAt, uint finishedAt);
+    event DomainRemoved(address indexed sender, string indexed domain);
+    event DomainContinue(address indexed sender, string indexed domain, uint cost, uint finishedAt);
     event TreasureChanged(address treasure);
     event MainPriceChanged(uint mainPrice);
 
@@ -94,6 +94,7 @@ contract DomainRegistry {
     }
 
     function domainInfo(string memory _domain) view external returns (DomainRecord memory){
+        require(!_onlyFreeDomain(_domain), 'free domain');
         return registryByName[_domain];
     }
 
