@@ -7,12 +7,13 @@ const helpers = require('@nomicfoundation/hardhat-network-helpers');
 describe('Adding sub domain', function () {
   let contract, owner, otherAccount, treasure;
   const mainPrice = 1_000_000_000;
+  const paymentPeriod = 365 * 3600 * 24;
   const parentDomain = 'com';
 
   const deployContract = async () => {
     [owner, otherAccount, treasure] = await ethers.getSigners();
 
-    contract = await (await ethers.getContractFactory('DomainRegistry')).deploy(mainPrice, treasure.address);
+    contract = await (await ethers.getContractFactory('DomainRegistry')).deploy(mainPrice, treasure.address, paymentPeriod);
 
     return { contract, mainPrice, owner, otherAccount };
   };

@@ -7,11 +7,12 @@ const helpers = require('@nomicfoundation/hardhat-network-helpers');
 describe('DomainRegistry', function () {
   let contract, owner, otherAccount, treasure;
   const mainPrice = 1_000_000_000;
+  const paymentPeriod = 365 * 3600 * 24;
 
   const deployContract = async () => {
     [owner, otherAccount, treasure] = await ethers.getSigners();
 
-    contract = await (await ethers.getContractFactory('DomainRegistry')).deploy(mainPrice, treasure.address);
+    contract = await (await ethers.getContractFactory('DomainRegistry')).deploy(mainPrice, treasure.address, paymentPeriod);
 
     return { contract, mainPrice, owner, otherAccount };
   };
@@ -29,11 +30,20 @@ describe('DomainRegistry', function () {
       expect(await contract.mainPrice()).to.equal(newMainPrice);
     });
   });
+
   describe('Treasure address', function () {
     it('Should set the new treasure address', async function () {
       const newAddress = otherAccount.address;
       await expect(contract.changeTreasure(newAddress)).to.emit(contract, 'TreasureChanged').withArgs(newAddress);
       expect(await contract.treasure()).to.equal(newAddress);
+    });
+  });
+
+  describe('Payment period', function () {
+    it('Should set the new payment period', async function () {
+      const newPeriodDuration = 180 * 3600 * 24;
+      await expect(contract.changePaymentPeriod(newPeriodDuration)).to.emit(contract, 'PaymentPeriodChanged').withArgs(newPeriodDuration);
+      expect(await contract.paymentPeriod()).to.equal(newPeriodDuration);
     });
   });
 
@@ -46,7 +56,7 @@ describe('DomainRegistry', function () {
       const years = 5;
       const cost = mainPrice * years;
       const createdAt = await helpers.time.latest() + 1;
-      const finishedAt = createdAt + 365 * 3600 * 24 * years;
+      const finishedAt = createdAt + paymentPeriod * years;
       await helpers.time.setNextBlockTimestamp(createdAt);
       const tx = contract.reserveDomain(domain, years, {
         value: cost,
@@ -112,6 +122,7 @@ describe('DomainRegistry', function () {
       expect(await contract.isFreeDomain(domain)).to.be.true;
     });
   });
+
   describe('Continue domain', function () {
     it('You need to renew the domain for another 2 years', async function () {
       const domain = 'aaa';
@@ -121,7 +132,7 @@ describe('DomainRegistry', function () {
       const cost = mainPrice * years;
       const [, createdAt, prevFinishedAt] = await contract.domainInfo(domain);
 
-      const finishedAt = Number(prevFinishedAt) + 365 * 3600 * 24 * years;
+      const finishedAt = Number(prevFinishedAt) + paymentPeriod * years;
       const tx = contract.continueDomain(domain, years, {
         value: cost,
       });
@@ -146,6 +157,7 @@ describe('DomainRegistry', function () {
       expect(await contract.isFreeDomain(domain)).to.false;
       const nextBlockTimestamp = Math.max(Number(prevFinishedAt), Number(await helpers.time.latest())) + 1;
       await helpers.time.increaseTo(nextBlockTimestamp);
+      await expect(contract.domainInfo(domain)).to.be.revertedWith('free domain');
       expect(await contract.isFreeDomain(domain)).to.true;
       await expect(
         contract.connect(otherAccount).reserveDomain(domain, 1, {
