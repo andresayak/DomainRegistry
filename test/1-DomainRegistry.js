@@ -23,11 +23,14 @@ describe('DomainRegistry', function () {
     it('Should set the right main payment amount per one year', async function () {
       expect(await contract.mainPrice()).to.equal(mainPrice);
     });
-
     it('Should set the new right main payment amount amount per one year', async function () {
       const newMainPrice = mainPrice + 1;
       await expect(contract.changeMainPrice(newMainPrice)).to.emit(contract, 'MainPriceChanged').withArgs(newMainPrice);
       expect(await contract.mainPrice()).to.equal(newMainPrice);
+    });
+    it('Should revert if call not owner', async function () {
+      const newMainPrice = mainPrice + 1;
+      await expect(contract.connect(otherAccount).changeMainPrice(newMainPrice)).to.reverted;
     });
   });
 
@@ -37,6 +40,9 @@ describe('DomainRegistry', function () {
       await expect(contract.changeTreasure(newAddress)).to.emit(contract, 'TreasureChanged').withArgs(newAddress);
       expect(await contract.treasure()).to.equal(newAddress);
     });
+    it('Should revert if call not owner', async function () {
+      await expect(contract.connect(otherAccount).changeTreasure(otherAccount.address)).to.reverted;
+    });
   });
 
   describe('Payment period', function () {
@@ -44,6 +50,10 @@ describe('DomainRegistry', function () {
       const newPeriodDuration = 180 * 3600 * 24;
       await expect(contract.changePaymentPeriod(newPeriodDuration)).to.emit(contract, 'PaymentPeriodChanged').withArgs(newPeriodDuration);
       expect(await contract.paymentPeriod()).to.equal(newPeriodDuration);
+    });
+    it('Should revert if call not owner', async function () {
+      const newPeriodDuration = 180 * 3600 * 24;
+      await expect(contract.connect(otherAccount).changePaymentPeriod(newPeriodDuration)).to.reverted;
     });
   });
 
@@ -120,6 +130,16 @@ describe('DomainRegistry', function () {
         }),
       ).to.be.revertedWith('wrong value');
       expect(await contract.isFreeDomain(domain)).to.be.true;
+    });
+    it('Should revert with the right error if contract paused', async function () {
+      const domain = 'aaa';
+
+      await expect(contract.pause()).not.reverted;
+      await expect(
+        contract.reserveDomain(domain, 1, {
+          value: mainPrice,
+        }),
+      ).to.be.reverted;
     });
   });
 

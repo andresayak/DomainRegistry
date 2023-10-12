@@ -7,7 +7,7 @@ dotEnvConfig({ path: __dirname + '/../.env' });
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
-  solidity: '0.8.19',
+  solidity: '0.8.20',
   gasReporter: {
     enabled: (process.env.REPORT_GAS) ? true : false
   },
