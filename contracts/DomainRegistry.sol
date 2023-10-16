@@ -3,8 +3,9 @@ pragma solidity ^0.8.20;
 //import "hardhat/console.sol";
 
 import './LibUtils.sol';
-import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Pausable.sol";
+import '@openzeppelin/contracts/access/Ownable.sol';
+import '@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol';
+import '@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol';
 
 struct DomainRecord {
   address owner;
@@ -12,7 +13,7 @@ struct DomainRecord {
   uint finishedAt;
 }
 
-contract DomainRegistry is Pausable, Ownable {
+contract DomainRegistry is Initializable, OwnableUpgradeable {
   address public treasure;
   uint public mainPrice;
   uint public paymentPeriod;
@@ -33,10 +34,11 @@ contract DomainRegistry is Pausable, Ownable {
   event MainPriceChanged(uint mainPrice);
   event PaymentPeriodChanged(uint paymentPeriod);
 
-  constructor(uint _mainPrice, address _treasure, uint _paymentPeriod) Ownable(_msgSender()){
+  function initialize(uint _mainPrice, address _treasure, uint _paymentPeriod) public initializer {
     mainPrice = _mainPrice;
     treasure = _treasure;
     paymentPeriod = _paymentPeriod;
+    __Ownable_init(_msgSender());
   }
 
   function changeTreasure(address _treasure) external onlyOwner {
@@ -56,7 +58,7 @@ contract DomainRegistry is Pausable, Ownable {
     emit PaymentPeriodChanged(_paymentPeriod);
   }
 
-  function reserveDomain(string memory _domain, uint8 _periods) external payable whenNotPaused noReentrant {
+  function reserveDomain(string memory _domain, uint8 _periods) external payable virtual noReentrant {
     _domain = Utils.clearDomain(_domain);
     require(_onlyFreeDomain(_domain), 'not free domain');
     require(_periods > 0, 'wrong periods');
@@ -76,7 +78,7 @@ contract DomainRegistry is Pausable, Ownable {
     emit DomainReserved(_msgSender(), _domain, _cost, _createdAt, _finishedAt);
   }
 
-  function continueDomain(string memory _domain, uint8 _periods) external payable whenNotPaused noReentrant {
+  function continueDomain(string memory _domain, uint8 _periods) external payable virtual noReentrant {
     _domain = Utils.clearDomain(_domain);
     validateDomainOwner(_domain);
     require(_periods > 0, 'wrong periods');
@@ -89,7 +91,7 @@ contract DomainRegistry is Pausable, Ownable {
     emit DomainContinue(_msgSender(), _domain, _cost, _finishedAt);
   }
 
-  function paymentProcessing(uint _price, uint8 _periods, uint _createdAt) internal returns (uint, uint) {
+  function paymentProcessing(uint _price, uint8 _periods, uint _createdAt) internal virtual returns (uint, uint) {
     uint _cost = _price * _periods;
     require(msg.value >= _cost, 'wrong value');
     uint _finishedAt = _createdAt + (paymentPeriod * _periods);
@@ -114,14 +116,6 @@ contract DomainRegistry is Pausable, Ownable {
 
   function domainOwner(string memory _domain) external view returns (address) {
     return registryByName[_domain].owner;
-  }
-
-  function pause() public onlyOwner {
-    _pause();
-  }
-
-  function unpause() public onlyOwner {
-    _unpause();
   }
 
   function validateDomainOwner(string memory _domain) internal view {

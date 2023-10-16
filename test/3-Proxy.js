@@ -1,23 +1,40 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
-const { ethers } = require('hardhat');
+const { ethers, upgrades } = require('hardhat');
 const { successReserveDomain, ZERO_ADDRESS } = require('./utils');
 const helpers = require('@nomicfoundation/hardhat-network-helpers');
+const hre = require('hardhat');
 
-describe('DomainRegistry', function () {
+describe('DomainRegistry V2', function () {
   let contract, owner, otherAccount, treasure;
   const mainPrice = 1_000_000_000;
   const paymentPeriod = 365 * 3600 * 24;
 
   const deployContract = async () => {
     [owner, otherAccount, treasure] = await ethers.getSigners();
+    const contractV1 = await hre.ethers.getContractFactory('DomainRegistry');
+    const deploy = await upgrades.deployProxy(contractV1, [mainPrice, treasure.address, paymentPeriod]);
+    await deploy.waitForDeployment();
 
-    contract = await (await ethers.getContractFactory('DomainRegistry')).deploy();
-    await contract.initialize(mainPrice, treasure.address, paymentPeriod);
+    const contractAddress = await deploy.getAddress();
+
+    const contractV2 = await hre.ethers.getContractFactory('DomainRegistryV2');
+
+    const deployV2 = await upgrades.upgradeProxy(contractAddress, contractV2);
+    await deployV2.waitForDeployment();
+
+    contract = await hre.ethers.getContractAt('DomainRegistryV2', contractAddress, owner);
+
     return { contract, mainPrice, owner, otherAccount };
   };
 
   beforeEach(async () => loadFixture(deployContract));
+
+  describe('Main payment amount', function () {
+    it('Should fail is call initialize second time', async function () {
+      await expect(contract.initialize(mainPrice, treasure.address, paymentPeriod)).to.be.reverted;
+    });
+  });
 
   describe('Main payment amount', function () {
     it('Should set the right main payment amount per one year', async function () {
@@ -58,7 +75,7 @@ describe('DomainRegistry', function () {
   });
 
   describe('Adding domain', function () {
-    it('Should reserve domain and send the payment to the treasury', async function () {
+    it('Should reserve domain and make reward for treasury', async function () {
       const domain = 'com';
 
       expect(await contract.isFreeDomain(domain)).to.be.true;
@@ -74,13 +91,14 @@ describe('DomainRegistry', function () {
       await expect(tx).to.emit(contract, 'DomainReserved').withArgs(owner.address, domain, cost, createdAt, finishedAt);
 
       await expect(tx).to.changeEtherBalance(owner, -cost);
-      await expect(tx).to.changeEtherBalance(treasure, cost);
+      await expect(tx).to.changeEtherBalance(contract, cost);
 
       expect(await contract.isFreeDomain(domain)).to.be.false;
       expect(await contract.domainOwner(domain)).to.equal(owner.address);
       const [,  createdAtCheck, finishedAtCheck] = await contract.domainInfo(domain);
       expect(createdAtCheck).to.be.equal(createdAt);
       expect(finishedAtCheck).to.be.equal(finishedAt);
+
     });
 
     it('Should reserve many domains', async function () {
@@ -148,7 +166,7 @@ describe('DomainRegistry', function () {
       await expect(tx).to.emit(contract, 'DomainContinue').withArgs(owner.address, domain, cost, finishedAt);
 
       await expect(tx).to.changeEtherBalance(owner, -cost);
-      await expect(tx).to.changeEtherBalance(treasure, cost);
+      await expect(tx).to.changeEtherBalance(contract, cost);
 
       expect(await contract.isFreeDomain(domain)).to.be.false;
       expect(await contract.domainOwner(domain)).to.equal(owner.address);
@@ -174,6 +192,75 @@ describe('DomainRegistry', function () {
         }),
       ).not.to.be.reverted;
       expect(await contract.isFreeDomain(domain)).to.be.false;
+    });
+  });
+
+  describe('Adding sub domain', function () {
+
+    const parentDomain = 'com';
+
+    beforeEach(async () => {
+      await successReserveDomain({contract, periods: 1, mainPrice, domain: parentDomain});
+    });
+
+    it('Should reserve sub-domain and store the funds to lock', async function() {
+
+      const domain = 'aaa.' + parentDomain;
+      expect(await contract.isFreeDomain(domain)).to.be.true;
+
+      const createdAt = await helpers.time.latest() + 1;// Math.ceil(new Date().getTime() / 1000);
+      const finishedAt = createdAt + 365 * 3600 * 24;
+      await helpers.time.setNextBlockTimestamp(createdAt);
+
+      const tx = contract.reserveDomain(domain, 1, {
+        value: mainPrice,
+      });
+      await expect(tx).to.emit(contract, 'DomainReserved').withArgs(owner.address, domain, mainPrice, createdAt, finishedAt);
+
+      await expect(tx).to.changeEtherBalance(owner, -mainPrice);
+      await expect(tx).to.changeEtherBalance(contract, mainPrice);
+
+      expect(await contract.isFreeDomain(domain)).to.be.false;
+      expect(await contract.domainOwner(domain)).to.equal(owner.address);
+    });
+
+    it('Should revert with the right error if sub-domain busy', async function() {
+      const domain = 'aaa.' + parentDomain;
+      await successReserveDomain({ contract, periods: 1, mainPrice, domain });
+      await expect(
+        contract.reserveDomain(domain, 1, {
+          value: mainPrice,
+        }),
+      ).to.be.revertedWith('not free domain');
+    });
+
+    it('Should reserve many sub-domains', async function() {
+      await successReserveDomain({ contract, periods: 1, mainPrice, domain: 'aaa.' + parentDomain });
+      await successReserveDomain({ contract, periods: 1, mainPrice, domain: 'bbb.aaa.' + parentDomain });
+      await successReserveDomain({ contract, periods: 1, mainPrice, domain: 'ccc.bbb.aaa.' + parentDomain });
+    });
+
+    it('Should reserve sub-domain with prefix', async function() {
+      await successReserveDomain({ contract, periods: 1, mainPrice, domain: 'https://aaa.' + parentDomain });
+    });
+
+    it('Should revert with the right error if parent domain is free', async function() {
+      const domain = 'aaa.xxx';
+
+      await expect(
+        contract.reserveDomain(domain, 1, {
+          value: mainPrice,
+        }),
+      ).to.be.revertedWith('parent domain is free');
+    });
+    describe('Sub domains registration', function () {
+      const [domain1, domain2, domain3] = ['aaa.'+parentDomain, 'bbb.'+parentDomain, 'ccc.'+parentDomain];
+
+      beforeEach(async () => {
+        await successReserveDomain({ contract, periods: 1, mainPrice, domain: domain1 });
+        await successReserveDomain({ contract, periods: 1, mainPrice, domain: domain2 });
+        await successReserveDomain({ contract, periods: 1, mainPrice, domain: domain3 });
+      });
     });
   });
 });

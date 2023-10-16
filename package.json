@@ -5,7 +5,6 @@
   "main": "index.js",
   "scripts": {
     "test": "REPORT_GAS=true npx hardhat test",
-    "deploy": "npx hardhat run scripts/deploy.js",
     "lint": "./node_modules/.bin/solhint -f table 'contracts/**/*.sol' -w 0",
     "format": "./node_modules/.bin/prettier --write 'contracts/**/*.sol'"
   },
@@ -15,6 +14,8 @@
     "@nomicfoundation/hardhat-network-helpers": "^1.0.9",
     "@nomicfoundation/hardhat-toolbox": "^3.0.0",
     "@openzeppelin/contracts": "^5.0.0",
+    "@openzeppelin/contracts-upgradeable": "^5.0.0",
+    "@openzeppelin/hardhat-upgrades": "^2.3.3",
     "dotenv": "^16.3.1",
     "eslint": "^8.49.0",
     "hardhat": "^2.17.3",
