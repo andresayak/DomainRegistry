@@ -5,7 +5,7 @@ const { successReserveDomain, ZERO_ADDRESS } = require('./utils');
 const helpers = require('@nomicfoundation/hardhat-network-helpers');
 const hre = require('hardhat');
 
-describe('DomainRegistry V2', function () {
+describe('DomainRegistry V2 with proxy', function () {
   let contract, owner, otherAccount, treasure;
   const mainPrice = 1_000_000_000;
   const paymentPeriod = 365 * 3600 * 24;

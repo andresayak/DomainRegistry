@@ -4,7 +4,7 @@ const { ethers, upgrades } = require('hardhat');
 const { successReserveDomain } = require('./utils');
 const hre = require('hardhat');
 
-describe('DomainRegistry V2', function () {
+describe('Rewards', function () {
   let contract, owner, otherAccount, treasure;
   const mainPrice = 1_000_000_000;
   const paymentPeriod = 365 * 3600 * 24;
@@ -30,46 +30,47 @@ describe('DomainRegistry V2', function () {
 
   beforeEach(async () => loadFixture(deployContract));
 
-  describe('Adding domain', function () {
-    it('Should reserve top domain and make 100% reward for treasure', async function() {
-      const periods = 1;
-      const domain = 'aaa';
-      const cost = mainPrice * periods;
-      await expect(contract.reserveDomain(domain, periods, {
+  it('Should reserve top domain and make 100% reward for treasure', async function () {
+    const periods = 1;
+    const domain = 'aaa';
+    const cost = mainPrice * periods;
+    await expect(
+      contract.reserveDomain(domain, periods, {
         value: mainPrice,
-      })).not.to.be.reverted;
+      }),
+    ).not.to.be.reverted;
 
-      expect(await contract.rewards(treasure.address)).to.equal(cost);
+    expect(await contract.rewards(treasure.address)).to.equal(cost);
 
-      const tx = contract.connect(treasure).withdrawReward();
-      await expect(tx).not.to.be.reverted;
-      await expect(tx).to.changeEtherBalance(contract, -cost);
-      await expect(tx).to.changeEtherBalance(treasure, cost);
-    });
+    const tx = contract.connect(treasure).withdrawReward();
+    await expect(tx).not.to.be.reverted;
+    await expect(tx).to.changeEtherBalance(contract, -cost);
+    await expect(tx).to.changeEtherBalance(treasure, cost);
+  });
 
-    it('Should reserve sub domain and get 10% reward for domain owner', async function() {
+  it('Should reserve sub domain and get 10% reward for domain owner', async function () {
+    const parentDomain = 'com';
+    await successReserveDomain({ contract, periods: 1, mainPrice, domain: parentDomain });
+    const parentCost = mainPrice;
 
-      const parentDomain = 'com';
-      await successReserveDomain({contract, periods: 1, mainPrice, domain: parentDomain});
-      const parentCost = mainPrice;
+    const periods = 10;
+    const domain = 'aaa.' + parentDomain;
 
-      const periods = 10;
-      const domain = 'aaa.'+parentDomain;
-
-      const subdomainCost = mainPrice * periods;
-      await expect(contract.reserveDomain(domain, periods, {
+    const subdomainCost = mainPrice * periods;
+    await expect(
+      contract.reserveDomain(domain, periods, {
         value: subdomainCost,
-      })).not.to.be.reverted;
+      }),
+    ).not.to.be.reverted;
 
-      const domainOwnerReward = subdomainCost * fee / 100;
-      const treasureReward = parentCost + subdomainCost - domainOwnerReward;
-      expect(await contract.rewards(owner.address)).to.equal(domainOwnerReward);
-      expect(await contract.rewards(treasure.address)).to.equal(treasureReward);
+    const domainOwnerReward = (subdomainCost * fee) / 100;
+    const treasureReward = parentCost + subdomainCost - domainOwnerReward;
+    expect(await contract.rewards(owner.address)).to.equal(domainOwnerReward);
+    expect(await contract.rewards(treasure.address)).to.equal(treasureReward);
 
-      const tx = contract.connect(owner).withdrawReward();
-      await expect(tx).not.to.be.reverted;
-      await expect(tx).to.changeEtherBalance(contract, -domainOwnerReward);
-      await expect(tx).to.changeEtherBalance(owner, domainOwnerReward);
-    });
+    const tx = contract.connect(owner).withdrawReward();
+    await expect(tx).not.to.be.reverted;
+    await expect(tx).to.changeEtherBalance(contract, -domainOwnerReward);
+    await expect(tx).to.changeEtherBalance(owner, domainOwnerReward);
   });
 });
