@@ -33,7 +33,7 @@ contract DomainRegistry is Pausable, Ownable {
   event MainPriceChanged(uint mainPrice);
   event PaymentPeriodChanged(uint paymentPeriod);
 
-  constructor(uint _mainPrice, address _treasure, uint _paymentPeriod) Ownable(_msgSender()){
+  constructor(uint _mainPrice, address _treasure, uint _paymentPeriod) Ownable(_msgSender()) {
     mainPrice = _mainPrice;
     treasure = _treasure;
     paymentPeriod = _paymentPeriod;
@@ -89,10 +89,10 @@ contract DomainRegistry is Pausable, Ownable {
     emit DomainContinue(_msgSender(), _domain, _cost, _finishedAt);
   }
 
-  function paymentProcessing(uint _price, uint8 _periods, uint _createdAt) internal returns (uint, uint) {
+  function paymentProcessing(uint _price, uint8 _periods, uint _periodStartedAt) internal returns (uint, uint) {
     uint _cost = _price * _periods;
-    require(msg.value >= _cost, 'wrong value');
-    uint _finishedAt = _createdAt + (paymentPeriod * _periods);
+    require(msg.value == _cost, 'wrong value');
+    uint _finishedAt = _periodStartedAt + (paymentPeriod * _periods);
 
     (bool sent, ) = treasure.call{value: msg.value}('');
     require(sent, 'failed to send Ether');
