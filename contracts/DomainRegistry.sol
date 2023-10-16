@@ -1,18 +1,22 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.9;
+pragma solidity ^0.8.20;
+//import "hardhat/console.sol";
 
-import './LibUtilsV2.sol';
+import './LibUtils.sol';
+import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/utils/Pausable.sol";
 
 struct DomainRecord {
   address owner;
-  uint deposit;
+  uint createdAt;
+  uint finishedAt;
 }
 
-contract DomainRegistry {
-  address public owner;
-  uint public reservationDeposit;
+contract DomainRegistry is Pausable, Ownable {
+  address public treasure;
+  uint public mainPrice;
+  uint public paymentPeriod;
   bool internal locked;
-  uint public countDomains;
   mapping(string => DomainRecord) internal registryByName;
 
   modifier noReentrant() {
@@ -22,46 +26,82 @@ contract DomainRegistry {
     locked = false;
   }
 
-  modifier onlyDomainOwner(string memory _domain) {
-    require(registryByName[_domain].owner == msg.sender, 'wrong sender');
-    _;
+  event DomainReserved(address indexed sender, string indexed domain, uint cost, uint createdAt, uint finishedAt);
+  event DomainRemoved(address indexed sender, string indexed domain);
+  event DomainContinue(address indexed sender, string indexed domain, uint cost, uint finishedAt);
+  event TreasureChanged(address treasure);
+  event MainPriceChanged(uint mainPrice);
+  event PaymentPeriodChanged(uint paymentPeriod);
+
+  constructor(uint _mainPrice, address _treasure, uint _paymentPeriod) Ownable(_msgSender()) {
+    mainPrice = _mainPrice;
+    treasure = _treasure;
+    paymentPeriod = _paymentPeriod;
   }
 
-  modifier onlyContractOwner() {
-    require(owner == msg.sender, 'only owner');
-    _;
+  function changeTreasure(address _treasure) external onlyOwner {
+    require(_treasure != address(0), 'wrong address');
+    treasure = _treasure;
+    emit TreasureChanged(_treasure);
   }
 
-  modifier onlyRightDepositValue() {
-    require(msg.value == reservationDeposit, 'wrong value');
-    _;
+  function changeMainPrice(uint _mainPrice) external onlyOwner {
+    mainPrice = _mainPrice;
+    emit MainPriceChanged(_mainPrice);
   }
 
-  event DomainReserved(address indexed sender, string domain, uint deposit);
-  event DomainRemoved(address indexed sender, string domain, uint deposit);
-  event ReservationDepositChanged(uint amount);
-
-  constructor(uint _reservationDeposit) {
-    reservationDeposit = _reservationDeposit;
-    owner = msg.sender;
+  function changePaymentPeriod(uint _paymentPeriod) external onlyOwner {
+    require(_paymentPeriod > 0, 'wrong payment period');
+    paymentPeriod = _paymentPeriod;
+    emit PaymentPeriodChanged(_paymentPeriod);
   }
 
-  function changeReservationDeposit(uint _reservationDeposit) external onlyContractOwner{
-    reservationDeposit = _reservationDeposit;
-    emit ReservationDepositChanged(_reservationDeposit);
-  }
-
-  function reserveDomain(string memory _domain) external payable onlyRightDepositValue {
+  function reserveDomain(string memory _domain, uint8 _periods) external payable whenNotPaused noReentrant {
     _domain = Utils.clearDomain(_domain);
+    require(_onlyFreeDomain(_domain), 'not free domain');
+    require(_periods > 0, 'wrong periods');
     string memory _parentDomain = Utils.parentDomain(_domain);
     if (bytes(_parentDomain).length > 0) {
       require(!_onlyFreeDomain(_parentDomain), 'parent domain is free');
     }
-    require(_onlyFreeDomain(_domain), 'not free domain');
+    uint _createdAt = block.timestamp;
+    (uint _finishedAt, uint _cost) = paymentProcessing(mainPrice, _periods, _createdAt);
 
-    registryByName[_domain] = DomainRecord(msg.sender, msg.value);
-    countDomains+=1;
-    emit DomainReserved(msg.sender, _domain, reservationDeposit);
+    DomainRecord memory _record;
+    _record.owner = _msgSender();
+    _record.createdAt = _createdAt;
+    _record.finishedAt = _finishedAt;
+
+    registryByName[_domain] = _record;
+    emit DomainReserved(_msgSender(), _domain, _cost, _createdAt, _finishedAt);
+  }
+
+  function continueDomain(string memory _domain, uint8 _periods) external payable whenNotPaused noReentrant {
+    _domain = Utils.clearDomain(_domain);
+    validateDomainOwner(_domain);
+    require(_periods > 0, 'wrong periods');
+    DomainRecord storage _record = registryByName[_domain];
+
+    uint _createdAt = _record.finishedAt;
+    (uint _finishedAt, uint _cost) = paymentProcessing(mainPrice, _periods, _createdAt);
+
+    _record.finishedAt = _finishedAt;
+    emit DomainContinue(_msgSender(), _domain, _cost, _finishedAt);
+  }
+
+  function paymentProcessing(uint _price, uint8 _periods, uint _periodStartedAt) internal returns (uint, uint) {
+    uint _cost = _price * _periods;
+    require(msg.value == _cost, 'wrong value');
+    uint _finishedAt = _periodStartedAt + (paymentPeriod * _periods);
+
+    (bool sent, ) = treasure.call{value: msg.value}('');
+    require(sent, 'failed to send Ether');
+    return (_finishedAt, _cost);
+  }
+
+  function domainInfo(string memory _domain) external view returns (DomainRecord memory) {
+    require(!_onlyFreeDomain(_domain), 'free domain');
+    return registryByName[_domain];
   }
 
   function isFreeDomain(string memory _domain) external view returns (bool) {
@@ -69,25 +109,22 @@ contract DomainRegistry {
   }
 
   function _onlyFreeDomain(string memory _domain) public view returns (bool) {
-    return registryByName[_domain].owner == address(0);
-  }
-
-  function removeReservationDomain(string memory _domain) external noReentrant onlyDomainOwner(_domain) {
-    _domain = Utils.clearDomain(_domain);
-
-    DomainRecord storage _record = registryByName[_domain];
-
-    uint _deposit = _record.deposit;
-    (bool sent, ) = msg.sender.call{value: _deposit}('');
-    require(sent, 'failed to send Ether');
-
-    registryByName[_domain] = DomainRecord(address(0), 0);
-
-    countDomains-=1;
-    emit DomainRemoved(msg.sender, _domain, _deposit);
+    return registryByName[_domain].owner == address(0) || block.timestamp > registryByName[_domain].finishedAt;
   }
 
   function domainOwner(string memory _domain) external view returns (address) {
     return registryByName[_domain].owner;
+  }
+
+  function pause() public onlyOwner {
+    _pause();
+  }
+
+  function unpause() public onlyOwner {
+    _unpause();
+  }
+
+  function validateDomainOwner(string memory _domain) internal view {
+    require(registryByName[_domain].owner == _msgSender(), 'wrong sender');
   }
 }
