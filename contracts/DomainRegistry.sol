@@ -91,10 +91,10 @@ contract DomainRegistry is Initializable, OwnableUpgradeable {
     emit DomainContinue(_msgSender(), _domain, _cost, _finishedAt);
   }
 
-  function paymentProcessing(uint _price, uint8 _periods, uint _createdAt) internal virtual returns (uint, uint) {
+  function paymentProcessing(uint _price, uint8 _periods, uint _periodStartedAt) internal virtual returns (uint, uint) {
     uint _cost = _price * _periods;
     require(msg.value >= _cost, 'wrong value');
-    uint _finishedAt = _createdAt + (paymentPeriod * _periods);
+    uint _finishedAt = _periodStartedAt + (paymentPeriod * _periods);
 
     (bool sent, ) = treasure.call{value: msg.value}('');
     require(sent, 'failed to send Ether');
