@@ -8,7 +8,7 @@ describe('Rewards', function () {
   let contract, owner, otherAccount, treasure;
   const mainPrice = 1_000_000_000;
   const paymentPeriod = 365 * 3600 * 24;
-  const fee = 7; //7%
+
   const deployContract = async () => {
     [owner, otherAccount, treasure] = await ethers.getSigners();
     const contractV1 = await hre.ethers.getContractFactory('DomainRegistry');
@@ -24,7 +24,7 @@ describe('Rewards', function () {
 
     contract = await hre.ethers.getContractAt('DomainRegistryV2', contractAddress, owner);
 
-    await expect(contract.setFee(fee)).not.to.be.reverted;
+
     return { contract, mainPrice, owner, otherAccount };
   };
 
@@ -48,7 +48,10 @@ describe('Rewards', function () {
     await expect(tx).to.changeEtherBalance(treasure, cost);
   });
 
-  it('Should reserve sub domain and get 10% reward for domain owner', async function () {
+  it('Should reserve sub domain and get 7% reward for domain owner', async function () {
+    const fee = 7; //7%
+    await expect(contract.setFee(fee)).not.to.be.reverted;
+
     const parentDomain = 'com';
     await successReserveDomain({ contract, periods: 1, mainPrice, domain: parentDomain });
     const parentCost = mainPrice;

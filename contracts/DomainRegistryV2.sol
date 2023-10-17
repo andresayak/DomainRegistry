@@ -73,14 +73,14 @@ contract DomainRegistryV2 is DomainRegistry {
     return (_finishedAt, _cost);
   }
 
-  function withdrawReward() external {
+  function withdrawReward() external noReentrant {
     uint _reward = rewards[_msgSender()];
     require(_reward > 0, 'no reward');
 
-    rewards[_msgSender()] = 0;
-
     (bool sent, ) = _msgSender().call{value: _reward}('');
     require(sent, 'failed to send Ether');
+
+    rewards[_msgSender()] = 0;
     emit WithdrawReward(_msgSender(), _reward);
   }
 }
