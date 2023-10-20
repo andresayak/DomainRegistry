@@ -12,6 +12,7 @@ contract DomainRegistryV2 is DomainRegistry {
 
   event FeeChanged(uint fee);
   event WithdrawReward(address indexed sender, uint amount);
+  event RewardAdded(address indexed account, uint amount);
 
   /// @custom:oz-upgrades-unsafe-allow constructor
   constructor() {
@@ -111,8 +112,12 @@ contract DomainRegistryV2 is DomainRegistry {
       DomainRecord storage _parentRecord = registryByName[_parentDomain];
       rewards[_parentRecord.owner] += _fee;
       _costWithoutFee = _cost - _fee;
+      emit RewardAdded(_parentRecord.owner, _fee);
     }
-    rewards[treasure] += _costWithoutFee;
+    if(_costWithoutFee > 0){
+      rewards[treasure] += _costWithoutFee;
+      emit RewardAdded(treasure, _fee);
+    }
     return (_finishedAt, _cost);
   }
 }
