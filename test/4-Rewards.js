@@ -1,8 +1,7 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
-const { ethers, upgrades } = require('hardhat');
-const { successReserveDomain } = require('./utils');
-const hre = require('hardhat');
+const { ethers } = require('hardhat');
+const { successReserveDomainV2 } = require('./utils');
 
 describe('Rewards', function () {
   let contract, owner, otherAccount, treasure;
@@ -11,19 +10,9 @@ describe('Rewards', function () {
 
   const deployContract = async () => {
     [owner, otherAccount, treasure] = await ethers.getSigners();
-    const contractV1 = await hre.ethers.getContractFactory('DomainRegistry');
-    const deploy = await upgrades.deployProxy(contractV1, [mainPrice, treasure.address, paymentPeriod]);
-    await deploy.waitForDeployment();
 
-    const contractAddress = await deploy.getAddress();
-
-    const contractV2 = await hre.ethers.getContractFactory('DomainRegistryV2');
-
-    const deployV2 = await upgrades.upgradeProxy(contractAddress, contractV2);
-    await deployV2.waitForDeployment();
-
-    contract = await hre.ethers.getContractAt('DomainRegistryV2', contractAddress, owner);
-
+    contract = await (await ethers.getContractFactory('DomainRegistry')).deploy();
+    await contract.initialize(mainPrice, treasure.address, paymentPeriod);
 
     return { contract, mainPrice, owner, otherAccount };
   };
@@ -35,7 +24,7 @@ describe('Rewards', function () {
     const domain = 'aaa';
     const cost = mainPrice * periods;
     await expect(
-      contract.reserveDomain(domain, periods, {
+      contract.reserveDomain(domain, periods, 0, {
         value: mainPrice,
       }),
     ).not.to.be.reverted;
@@ -53,7 +42,7 @@ describe('Rewards', function () {
     await expect(contract.setFee(fee)).not.to.be.reverted;
 
     const parentDomain = 'com';
-    await successReserveDomain({ contract, periods: 1, mainPrice, domain: parentDomain });
+    await successReserveDomainV2({ contract, periods: 1, mainPrice, domain: parentDomain });
     const parentCost = mainPrice;
 
     const periods = 10;
@@ -61,7 +50,7 @@ describe('Rewards', function () {
 
     const subdomainCost = mainPrice * periods;
     await expect(
-      contract.reserveDomain(domain, periods, {
+      contract.reserveDomain(domain, periods, 0, {
         value: subdomainCost,
       }),
     ).not.to.be.reverted;
