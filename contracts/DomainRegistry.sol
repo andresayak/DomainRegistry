@@ -35,10 +35,6 @@ contract DomainRegistry is OwnableUpgradeable {
   event MainPriceChanged(uint mainPrice);
   event PaymentPeriodChanged(uint paymentPeriod);
 
-  constructor(uint _mainPrice, address _treasure, uint _paymentPeriod) {
-    initialize(_mainPrice, _treasure, _paymentPeriod);
-  }
-
   function initialize(uint _mainPrice, address _treasure, uint _paymentPeriod) public initializer {
     mainPrice = _mainPrice;
     treasure = _treasure;
