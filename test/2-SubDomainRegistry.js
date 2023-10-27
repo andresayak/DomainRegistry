@@ -14,6 +14,7 @@ describe('Adding sub domain', function () {
     [owner, otherAccount, treasure] = await ethers.getSigners();
 
     contract = await (await ethers.getContractFactory('DomainRegistry')).deploy(mainPrice, treasure.address, paymentPeriod);
+    await contract.waitForDeployment();
 
     return { contract, mainPrice, owner, otherAccount };
   };
