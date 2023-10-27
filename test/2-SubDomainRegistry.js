@@ -1,6 +1,6 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
-const { ethers } = require('hardhat');
+const { ethers, upgrades } = require('hardhat');
 const { successReserveDomainV2 } = require('./utils');
 const helpers = require('@nomicfoundation/hardhat-network-helpers');
 
@@ -13,8 +13,11 @@ describe('Adding sub domain', function () {
   const deployContract = async () => {
     [owner, otherAccount, treasure] = await ethers.getSigners();
 
-    contract = await (await ethers.getContractFactory('DomainRegistry')).deploy(mainPrice, treasure.address, paymentPeriod);
-    await contract.waitForDeployment();
+    const Contract = await ethers.getContractFactory('DomainRegistry');
+    const deploy = await upgrades.deployProxy(Contract, [mainPrice, treasure.address, paymentPeriod]);
+    await deploy.waitForDeployment();
+    const contractAddress = await deploy.getAddress();
+    contract = await ethers.getContractAt('DomainRegistry', contractAddress, owner);
 
     return { contract, mainPrice, owner, otherAccount };
   };

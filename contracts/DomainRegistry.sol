@@ -41,10 +41,6 @@ contract DomainRegistry is OwnableUpgradeable {
     event FeeChanged(uint fee);
     event WithdrawReward(address indexed sender, uint amount);
 
-    constructor(uint _mainPrice, address _treasure, uint _paymentPeriod) {
-        initialize(_mainPrice, _treasure, _paymentPeriod);
-    }
-
     function setFee(uint _fee) external onlyOwner {
         fee = _fee;
         emit FeeChanged(_fee);

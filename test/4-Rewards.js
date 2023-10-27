@@ -1,6 +1,6 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
-const { ethers } = require('hardhat');
+const { ethers, upgrades } = require('hardhat');
 const { successReserveDomainV2 } = require('./utils');
 
 describe('Rewards', function () {
@@ -11,9 +11,11 @@ describe('Rewards', function () {
   const deployContract = async () => {
     [owner, otherAccount, treasure] = await ethers.getSigners();
 
-    contract = await (await ethers.getContractFactory('DomainRegistry')).deploy();
-    await contract.waitForDeployment();
-    await contract.initialize(mainPrice, treasure.address, paymentPeriod);
+    const Contract = await ethers.getContractFactory('DomainRegistry');
+    const deploy = await upgrades.deployProxy(Contract, [mainPrice, treasure.address, paymentPeriod]);
+    await deploy.waitForDeployment();
+    const contractAddress = await deploy.getAddress();
+    contract = await ethers.getContractAt('DomainRegistry', contractAddress, owner);
 
     return { contract, mainPrice, owner, otherAccount };
   };

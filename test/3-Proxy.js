@@ -4,7 +4,7 @@ const { ethers, upgrades } = require('hardhat');
 const { successReserveDomain } = require('./utils');
 const helpers = require('@nomicfoundation/hardhat-network-helpers');
 const hre = require('hardhat');
-const { abi: abiV1, bytecode: bytecodeV1 } = require('./data/DomainRegistryV1-2.json');
+const { abi: abiV1, bytecode: bytecodeV1 } = require('./data/DomainRegistryV1.json');
 
 describe('Smoke test after upgrade', function () {
   let contract, owner, otherAccount, treasure;
@@ -14,8 +14,8 @@ describe('Smoke test after upgrade', function () {
 
   const deployContract = async () => {
     [owner, otherAccount, treasure] = await ethers.getSigners();
-    const contractV1 = new hre.ethers.ContractFactory(abiV1, bytecodeV1, owner);
-    const deploy = await upgrades.deployProxy(contractV1, [mainPrice, treasure.address, paymentPeriod]);
+    const ContractV1 = new hre.ethers.ContractFactory(abiV1, bytecodeV1, owner);
+    const deploy = await upgrades.deployProxy(ContractV1, [mainPrice, treasure.address, paymentPeriod]);
     await deploy.waitForDeployment();
 
     const contractAddress = await deploy.getAddress();
@@ -24,9 +24,9 @@ describe('Smoke test after upgrade', function () {
 
     await actionBeforeUpgrade();
 
-    const contractV2 = await hre.ethers.getContractFactory('DomainRegistry');
+    const ContractV2 = await hre.ethers.getContractFactory('DomainRegistry');
 
-    const deployV2 = await upgrades.upgradeProxy(contractAddress, contractV2);
+    const deployV2 = await upgrades.upgradeProxy(contractAddress, ContractV2);
     await deployV2.waitForDeployment();
 
     contract = await hre.ethers.getContractAt('DomainRegistry', contractAddress, owner);
