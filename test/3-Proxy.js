@@ -4,7 +4,7 @@ const { ethers, upgrades } = require('hardhat');
 const { successReserveDomain } = require('./utils');
 const helpers = require('@nomicfoundation/hardhat-network-helpers');
 const hre = require('hardhat');
-const { abi: abiV1, bytecode: bytecodeV1 } = require('./data/DomainRegistryV1.json');
+const { abi: abiV1, bytecode: bytecodeV1 } = require('./data/DomainRegistryV1-2.json');
 
 describe('Smoke test after upgrade', function () {
   let contract, owner, otherAccount, treasure;

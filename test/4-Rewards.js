@@ -12,6 +12,7 @@ describe('Rewards', function () {
     [owner, otherAccount, treasure] = await ethers.getSigners();
 
     contract = await (await ethers.getContractFactory('DomainRegistry')).deploy();
+    await contract.waitForDeployment();
     await contract.initialize(mainPrice, treasure.address, paymentPeriod);
 
     return { contract, mainPrice, owner, otherAccount };

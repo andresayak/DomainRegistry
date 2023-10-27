@@ -4,27 +4,6 @@
   "sourceName": "contracts/DomainRegistry.sol",
   "abi": [
     {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "_mainPrice",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "_treasure",
-          "type": "address"
-        },
-        {
-          "internalType": "uint256",
-          "name": "_paymentPeriod",
-          "type": "uint256"
-        }
-      ],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
-    {
       "inputs": [],
       "name": "InvalidInitialization",
       "type": "error"
