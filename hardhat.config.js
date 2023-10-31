@@ -5,7 +5,6 @@ require('@openzeppelin/hardhat-upgrades');
 const { config: dotEnvConfig } = require('dotenv');
 dotEnvConfig({ path: __dirname + '/.env' });
 
-const MNEMONIC = process.env.MNEMONIC || 'test test test test test test test test test test test junk';
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
   solidity: '0.8.20',
@@ -15,7 +14,7 @@ module.exports = {
   networks: {
     hardhat: {
       accounts: {
-        mnemonic: MNEMONIC
+        mnemonic: process.env.MNEMONIC || 'test test test test test test test test test test test junk',
       }
     }
   }
