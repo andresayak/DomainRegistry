@@ -1,9 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity ^0.8.20;
-//import "hardhat/console.sol";
 
+/// @author Andrii Saiak
+/// @title Utility Functions for Domain Processing
 library Utils {
-
+  /// @notice Extract the parent domain from a given domain string.
+  /// @param _domain The full domain string.
+  /// @return _parentDomain The parent domain, which is the substring of the input string up to the first dot ('.') character.
   function parentDomain(string memory _domain) internal pure returns (string memory _parentDomain) {
     bytes memory _domainBytes = bytes(_domain);
     bytes1 _dotByte = bytes1('.');
@@ -26,7 +29,9 @@ library Utils {
     }
   }
 
-
+  /// @notice Remove any prefix (e.g., '://') from the domain string.
+  /// @param _domain The domain string that may contain a prefix.
+  /// @return The domain string with the prefix removed.
   function clearDomain(string memory _domain) internal pure returns (string memory) {
     bytes memory _domainBytes = bytes(_domain);
     bytes memory _prefixBytes = bytes('://');
@@ -57,8 +62,17 @@ library Utils {
     return _domain;
   }
 
-  function substr(bytes memory _strBytes, uint _startIndex, uint _endIndex) internal pure returns (bytes memory _result) {
-    require(_startIndex <= _endIndex, "Invalid start and end indices");
+  /// @notice Extract a substring from a given byte array.
+  /// @param _strBytes The byte array from which to extract the substring.
+  /// @param _startIndex The start index of the substring.
+  /// @param _endIndex The end index of the substring.
+  /// @return _result The extracted substring.
+  function substr(bytes memory _strBytes, uint _startIndex, uint _endIndex)
+    internal
+    pure
+    returns (bytes memory _result)
+  {
+    require(_startIndex <= _endIndex, 'Invalid start and end indices');
     uint _length = _endIndex - _startIndex;
     assembly {
       _result := mload(0x40)

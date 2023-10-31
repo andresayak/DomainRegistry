@@ -1,7 +1,7 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
 const { ethers, upgrades } = require('hardhat');
-const { successReserveDomain, ZERO_ADDRESS } = require('./utils');
+const { successReserveDomainV2, ZERO_ADDRESS } = require('./utils');
 const helpers = require('@nomicfoundation/hardhat-network-helpers');
 
 describe('DomainRegistry', function () {
@@ -68,54 +68,57 @@ describe('DomainRegistry', function () {
   });
 
   describe('Adding domain', function () {
-    it('Should reserve domain and send the payment to the treasury', async function () {
+    it('Should reserve domain and send the reward to the treasury', async function () {
       const domain = 'com';
 
       expect(await contract.isFreeDomain(domain)).to.be.true;
 
       const years = 5;
+      const additionalPrice = 1_000_000_000;
       const cost = mainPrice * years;
       const createdAt = await helpers.time.latest() + 1;
       const finishedAt = createdAt + paymentPeriod * years;
       await helpers.time.setNextBlockTimestamp(createdAt);
-      const tx = contract.reserveDomain(domain, years, {
+      const tx = contract.reserveDomain(domain, years, additionalPrice, {
         value: cost,
       });
       await expect(tx).to.emit(contract, 'DomainReserved').withArgs(owner.address, domain, cost, createdAt, finishedAt);
 
       await expect(tx).to.changeEtherBalance(owner, -cost);
-      await expect(tx).to.changeEtherBalance(treasure, cost);
+      await expect(tx).to.changeEtherBalance(contract, cost);
 
       expect(await contract.isFreeDomain(domain)).to.be.false;
       expect(await contract.domainOwner(domain)).to.equal(owner.address);
-      const [,  createdAtCheck, finishedAtCheck] = await contract.domainInfo(domain);
+      expect(await contract.domainPrice(domain)).to.equal(mainPrice + additionalPrice);
+      const [,  createdAtCheck, finishedAtCheck, additionPriceCheck] = await contract.domainInfo(domain);
       expect(createdAtCheck).to.be.equal(createdAt);
       expect(finishedAtCheck).to.be.equal(finishedAt);
+      expect(additionPriceCheck).to.be.equal(additionalPrice);
 
     });
 
     it('Should reserve many domains', async function () {
-      await successReserveDomain({ contract, periods: 1, mainPrice, domain: 'aaa' });
-      await successReserveDomain({ contract, periods: 1, mainPrice, domain: 'bbb' });
+      await successReserveDomainV2({ contract, periods: 1, mainPrice, domain: 'aaa' });
+      await successReserveDomainV2({ contract, periods: 1, mainPrice, domain: 'bbb' });
     });
 
     it('Should reserve domain with prefix', async function () {
-      await successReserveDomain({ contract, periods: 1, mainPrice, domain: 'https://aaa' });
+      await successReserveDomainV2({ contract, periods: 1, mainPrice, domain: 'https://aaa' });
       expect(await contract.domainOwner('https://aaa')).to.equal(ZERO_ADDRESS);
       expect(await contract.domainOwner('aaa')).to.equal(owner.address);
     });
 
     it('Should reserve domain length more prefix', async function () {
       const domain = 'aaaaaaaaaaaaaaaaaaaa';
-      await successReserveDomain({ contract, periods: 1, mainPrice, domain });
+      await successReserveDomainV2({ contract, periods: 1, mainPrice, domain });
       expect(await contract.domainOwner(domain)).to.equal(owner.address);
     });
 
     it('Should revert with the right error if domain busy', async function () {
       const domain = 'aaa';
-      await successReserveDomain({ contract, periods: 1, mainPrice, domain });
+      await successReserveDomainV2({ contract, periods: 1, mainPrice, domain });
       await expect(
-        contract.reserveDomain(domain, 1, {
+        contract.reserveDomain(domain, 1, 0,{
           value: mainPrice,
         }),
       ).to.be.revertedWith('not free domain');
@@ -125,7 +128,7 @@ describe('DomainRegistry', function () {
       const domain = '';
 
       await expect(
-        contract.reserveDomain(domain, 1, {
+        contract.reserveDomain(domain, 1, 0, {
           value: mainPrice,
         }),
       ).to.be.revertedWith('empty domain');
@@ -135,7 +138,7 @@ describe('DomainRegistry', function () {
       const domain = 'aaa';
 
       await expect(
-        contract.reserveDomain(domain, 1, {
+        contract.reserveDomain(domain, 1, 0, {
           value: mainPrice - 1,
         }),
       ).to.be.revertedWith('wrong value');
@@ -146,7 +149,7 @@ describe('DomainRegistry', function () {
   describe('Continue domain', function () {
     it('You need to renew the domain for another 2 years', async function () {
       const domain = 'aaa';
-      await successReserveDomain({ contract, periods: 1, mainPrice, domain });
+      await successReserveDomainV2({ contract, periods: 1, mainPrice, domain });
 
       const years = 2;
       const cost = mainPrice * years;
@@ -159,7 +162,7 @@ describe('DomainRegistry', function () {
       await expect(tx).to.emit(contract, 'DomainContinue').withArgs(owner.address, domain, cost, finishedAt);
 
       await expect(tx).to.changeEtherBalance(owner, -cost);
-      await expect(tx).to.changeEtherBalance(treasure, cost);
+      await expect(tx).to.changeEtherBalance(contract, cost);
 
       expect(await contract.isFreeDomain(domain)).to.be.false;
       expect(await contract.domainOwner(domain)).to.equal(owner.address);
@@ -171,7 +174,7 @@ describe('DomainRegistry', function () {
 
     it('Should reserve old domain', async function() {
       const domain = 'aaa';
-      await successReserveDomain({ contract, periods: 1, mainPrice, domain });
+      await successReserveDomainV2({ contract, periods: 1, mainPrice, domain });
 
       const [, , prevFinishedAt] = await contract.domainInfo(domain);
       expect(await contract.isFreeDomain(domain)).to.false;
@@ -180,7 +183,7 @@ describe('DomainRegistry', function () {
       await expect(contract.domainInfo(domain)).to.be.revertedWith('free domain');
       expect(await contract.isFreeDomain(domain)).to.true;
       await expect(
-        contract.connect(otherAccount).reserveDomain(domain, 1, {
+        contract.connect(otherAccount).reserveDomain(domain, 1, 0,{
           value: mainPrice,
         }),
       ).not.to.be.reverted;

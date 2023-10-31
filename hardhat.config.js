@@ -3,8 +3,7 @@ require('hardhat-gas-reporter');
 require('@openzeppelin/hardhat-upgrades');
 
 const { config: dotEnvConfig } = require('dotenv');
-
-dotEnvConfig({ path: __dirname + '/../.env' });
+dotEnvConfig({ path: __dirname + '/.env' });
 
 /** @type import('hardhat/config').HardhatUserConfig */
 module.exports = {
@@ -15,7 +14,7 @@ module.exports = {
   networks: {
     hardhat: {
       accounts: {
-        mnemonic: process.env.MNEMONIC || 'test test test test test test test test test test test junk'
+        mnemonic: process.env.MNEMONIC || 'test test test test test test test test test test test junk',
       }
     }
   }
