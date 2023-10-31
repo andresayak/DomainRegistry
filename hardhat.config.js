@@ -1,5 +1,6 @@
 require('@nomicfoundation/hardhat-toolbox');
 require('hardhat-gas-reporter');
+require('@openzeppelin/hardhat-upgrades');
 
 const { config: dotEnvConfig } = require('dotenv');
 

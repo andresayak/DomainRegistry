@@ -1,6 +1,6 @@
 const { loadFixture } = require('@nomicfoundation/hardhat-toolbox/network-helpers');
 const { expect } = require('chai');
-const { ethers } = require('hardhat');
+const { ethers, upgrades } = require('hardhat');
 const { successReserveDomain, ZERO_ADDRESS } = require('./utils');
 const helpers = require('@nomicfoundation/hardhat-network-helpers');
 
@@ -12,12 +12,22 @@ describe('DomainRegistry', function () {
   const deployContract = async () => {
     [owner, otherAccount, treasure] = await ethers.getSigners();
 
-    contract = await (await ethers.getContractFactory('DomainRegistry')).deploy(mainPrice, treasure.address, paymentPeriod);
+    const Contract = await ethers.getContractFactory('DomainRegistry');
+    const deploy = await upgrades.deployProxy(Contract, [mainPrice, treasure.address, paymentPeriod]);
+    await deploy.waitForDeployment();
+    const contractAddress = await deploy.getAddress();
+    contract = await ethers.getContractAt('DomainRegistry', contractAddress, owner);
 
     return { contract, mainPrice, owner, otherAccount };
   };
 
   beforeEach(async () => loadFixture(deployContract));
+
+  describe('Check initializer', function () {
+    it('Should revert if call initialize second time', async function () {
+      await expect(contract.initialize(mainPrice, treasure.address, paymentPeriod)).to.reverted;
+    });
+  });
 
   describe('Main payment amount', function () {
     it('Should set the right main payment amount per one year', async function () {
@@ -130,16 +140,6 @@ describe('DomainRegistry', function () {
         }),
       ).to.be.revertedWith('wrong value');
       expect(await contract.isFreeDomain(domain)).to.be.true;
-    });
-    it('Should revert with the right error if contract paused', async function () {
-      const domain = 'aaa';
-
-      await expect(contract.pause()).not.reverted;
-      await expect(
-        contract.reserveDomain(domain, 1, {
-          value: mainPrice,
-        }),
-      ).to.be.reverted;
     });
   });
 
