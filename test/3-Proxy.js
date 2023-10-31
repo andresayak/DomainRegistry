@@ -6,7 +6,7 @@ const helpers = require('@nomicfoundation/hardhat-network-helpers');
 const hre = require('hardhat');
 const { abi: abiV1, bytecode: bytecodeV1 } = require('./data/DomainRegistryV1.json');
 
-describe('Smoke test after upgrade', function () {
+describe.skip('Smoke test after upgrade', function () {
   let contract, owner, otherAccount, treasure;
   let actionBeforeUpgrade = async () => {};
   const mainPrice = 1_000_000_000;

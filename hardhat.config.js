@@ -14,7 +14,7 @@ module.exports = {
   networks: {
     hardhat: {
       accounts: {
-        mnemonic: process.env.MNEMONIC || 'test test test test test test test test test test test junk';
+        mnemonic: process.env.MNEMONIC || 'test test test test test test test test test test test junk',
       }
     }
   }
