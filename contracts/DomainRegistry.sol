@@ -217,14 +217,15 @@ contract DomainRegistry is OwnableUpgradeable {
 
     /// @notice get reward for domain registration
     /// @dev Allows the owner of a contract or parent domain to withdraw reward for domain registration
-    function withdrawReward() external noReentrant {
+    function withdrawReward() external {
         uint _reward = rewards[_msgSender()];
         require(_reward > 0, 'no reward');
+
+        rewards[_msgSender()] = 0;
 
         (bool sent,) = _msgSender().call{value: _reward}('');
         require(sent, 'failed to send Ether');
 
-        rewards[_msgSender()] = 0;
         emit WithdrawReward(_msgSender(), _reward);
     }
 
