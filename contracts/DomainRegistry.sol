@@ -192,25 +192,27 @@ contract DomainRegistry is OwnableUpgradeable {
     /// @param _periodStartedAt The timestamp when the current period started.
     /// @return The timestamp when the reservation or extension period will end and the total cost of the transaction.
     function _paymentProcessing(string memory _parentDomain, uint _price, uint8 _periods, uint _periodStartedAt) internal returns (uint, uint) {
-        uint _cost = _price * _periods;
+        uint _baseCost = _price * _periods;
+        uint _totalCost = _baseCost;
 
-        require(msg.value == _cost, 'wrong value');
         uint _finishedAt = _periodStartedAt + (paymentPeriod * _periods);
-        uint _fee = fee > 0 ? (_cost * fee) / 100 : 0;
-        uint _costWithoutFee = _cost;
 
-        if (bytes(_parentDomain).length > 0 && _fee > 0 && !_onlyFreeDomain(_parentDomain)) {
+        if (bytes(_parentDomain).length > 0) {
             DomainRecord storage _parentRecord = registryByName[_parentDomain];
-            _cost += _parentRecord.additionalPrice;
-            _fee = fee > 0 ? (_cost * fee) / 100 : 0;
-            if (_parentRecord.additionalPrice > 0) {
-                _fee = _parentRecord.additionalPrice;
+            _totalCost += _parentRecord.additionalPrice  * _periods;
+            require(msg.value == _totalCost, 'wrong value');
+            if(!_onlyFreeDomain(_parentDomain)){
+                uint _fee = fee > 0 ? (_parentRecord.additionalPrice * _periods * fee) / 100 : 0;
+                rewards[_parentRecord.owner] += _totalCost - _baseCost - _fee;
+                rewards[treasure] += _baseCost + _fee;
+                return (_finishedAt, _totalCost);
             }
-            rewards[_parentRecord.owner] += _fee;
-            _costWithoutFee = _cost - _fee;
+        }else{
+            require(msg.value == _totalCost, 'wrong value');
         }
-        rewards[treasure] += _costWithoutFee;
-        return (_finishedAt, _cost);
+
+        rewards[treasure] += _totalCost;
+        return (_finishedAt, _totalCost);
     }
 
     /// @notice get reward for domain registration
