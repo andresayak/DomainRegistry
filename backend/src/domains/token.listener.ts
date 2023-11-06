@@ -42,7 +42,10 @@ export class TokenListener {
         token,
         feed,
       });
-      const {name, symbol, decimals} = await this.fetchTokenData(chainId, token);
+      const { name, symbol, decimals } = await this.fetchTokenData(
+        chainId,
+        token,
+      );
       try {
         await this.tokenRepository.save(
           new TokenEntity({
@@ -51,7 +54,7 @@ export class TokenListener {
             feedAddress: feed,
             name,
             symbol,
-            decimals
+            decimals,
           }),
         );
       } catch (e) {
@@ -75,21 +78,25 @@ export class TokenListener {
     }
   }
 
-  async fetchTokenData(chainId: number, tokenAddress: string){
+  async fetchTokenData(chainId: number, tokenAddress: string) {
     const provider = this.providerFactoryService.create(chainId, 'http');
     const wallet = this.wallet.connect(provider);
 
     const contract = new Contract(tokenAddress, ERC20MetadataAbi, wallet);
-    let name = '', symbol = '', decimals = null;
+    let name = '',
+      symbol = '',
+      decimals = null;
     try {
       name = await contract.name();
       symbol = await contract.symbol();
       decimals = await contract.decimals();
-    }catch (e) {
+    } catch (e) {
       console.warn(e);
     }
     return {
-      name, symbol, decimals
-    }
+      name,
+      symbol,
+      decimals,
+    };
   }
 }

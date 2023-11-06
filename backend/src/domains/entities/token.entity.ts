@@ -1,13 +1,13 @@
 import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm';
-import { BaseEntity } from "../../common/base.entity";
+import { BaseEntity } from '../../common/base.entity';
 
 @Entity('tokens')
 @Index(['chainId', 'address'], { unique: true })
-export class TokenEntity extends BaseEntity<TokenEntity>{
+export class TokenEntity extends BaseEntity<TokenEntity> {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ name: 'chain_id',  type: 'integer' })
+  @Column({ name: 'chain_id', type: 'integer' })
   chainId: number;
 
   @Column({ name: 'address', type: 'varchar' })

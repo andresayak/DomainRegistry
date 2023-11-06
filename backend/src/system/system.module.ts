@@ -6,7 +6,7 @@ import { ConfigService } from '@nestjs/config';
 import { createClient } from 'redis';
 import { ProviderFactory } from './provider.factory';
 import { ethers, Mnemonic } from 'ethers';
-import { ScannerService } from "./scanner.service";
+import { ScannerService } from './scanner.service';
 
 @Module({
   imports: [DatabaseModule],
@@ -31,13 +31,11 @@ import { ScannerService } from "./scanner.service";
     {
       provide: 'CHAINS',
       useFactory: (configService: ConfigService): number[] => {
-        const chains = configService
-          .get('CHAINS');
-        if(!chains){
+        const chains = configService.get('CHAINS');
+        if (!chains) {
           throw new Error('env CHAINS not set');
         }
-        return chains.split(',')
-          .map((chainId) => parseInt(chainId));
+        return chains.split(',').map((chainId) => parseInt(chainId));
       },
       inject: [ConfigService],
     },
@@ -45,9 +43,7 @@ import { ScannerService } from "./scanner.service";
       provide: 'MAIN_WALLET',
       useFactory: async (configService: ConfigService) => {
         return ethers.HDNodeWallet.fromMnemonic(
-          Mnemonic.fromPhrase(
-            configService.get<string>('MNEMONIC'),
-          ),
+          Mnemonic.fromPhrase(configService.get<string>('MNEMONIC')),
         );
       },
       inject: [ConfigService],

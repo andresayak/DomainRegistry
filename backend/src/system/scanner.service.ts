@@ -5,7 +5,7 @@ import { BlockListenerService } from './block-listener.service';
 import { EventEmitter2, OnEvent } from '@nestjs/event-emitter';
 import { ConfigService } from '@nestjs/config';
 import { RedisClientType } from 'redis';
-import * as process from "process";
+import * as process from 'process';
 
 @Injectable()
 export class ScannerService implements OnModuleInit {
@@ -22,9 +22,9 @@ export class ScannerService implements OnModuleInit {
   ) {}
 
   public async onModuleInit() {
-    if(process.env.NODE_ENV == 'test') return;
+    if (process.env.NODE_ENV == 'test') return;
     await this.createListeners();
-    this.listeners.map(listener=>listener.init());
+    this.listeners.map((listener) => listener.init());
   }
 
   private create(chainId: number): ethers.WebSocketProvider {
@@ -37,12 +37,12 @@ export class ScannerService implements OnModuleInit {
   private async createListeners() {
     for (const chainId of this.chains) {
       const contractAddress = this.configService.get<string>(
-        'DOMAIN_REGISTRY_ADDRESS_'+chainId,
+        'DOMAIN_REGISTRY_ADDRESS_' + chainId,
       );
-      const contractDeployedBlock = parseInt(this.configService.get<string>(
-        'DOMAIN_REGISTRY_BLOCK_'+chainId,
-      ));
-      if(!contractAddress){
+      const contractDeployedBlock = parseInt(
+        this.configService.get<string>('DOMAIN_REGISTRY_BLOCK_' + chainId),
+      );
+      if (!contractAddress) {
         return false;
       }
       console.log('DOMAIN_REGISTRY_ADDRESS', contractAddress);
@@ -58,7 +58,7 @@ export class ScannerService implements OnModuleInit {
           provider,
           chainId,
           contractAddress,
-          lastBlock?lastBlock:contractDeployedBlock,
+          lastBlock ? lastBlock : contractDeployedBlock,
         ),
       );
     }

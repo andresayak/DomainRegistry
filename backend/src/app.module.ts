@@ -3,7 +3,7 @@ import { EnvModule } from './env/env.module';
 import { DatabaseModule } from './database/database.module';
 import { SystemModule } from './system/system.module';
 import { EventEmitterModule } from '@nestjs/event-emitter';
-import { DomainModule } from "./domains/domain.module";
+import { DomainModule } from './domains/domain.module';
 
 @Module({
   imports: [

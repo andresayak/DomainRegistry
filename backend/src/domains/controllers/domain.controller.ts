@@ -19,7 +19,7 @@ export class DomainController {
       where: {
         chainId,
         parentId: IsNull(),
-        finishedAt: MoreThan(new Date())
+        finishedAt: MoreThan(new Date()),
       },
       order: {
         createdAt: 'DESC',
