@@ -1,0 +1,111 @@
+version: '3.4'
+services:
+
+  backend:
+    build:
+      context: backend
+      dockerfile: Dockerfile
+      target: base
+    container_name: backend
+    restart: unless-stopped
+    tty: true
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PORT: ${POSTGRES_PORT}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    working_dir: /var/www/app
+    volumes:
+      - ./backend:/var/www/app
+    ports:
+      - "5000:5000"
+    extra_hosts:
+      - "host:host-gateway"
+    links:
+      - db
+      - redis
+    networks:
+      - app-network
+
+  hardhat:
+    build:
+      context: ./hardhat
+      dockerfile: Dockerfile
+      target: base
+    container_name: hardhat
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www/app
+    expose:
+      - "8545"
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./hardhat:/var/www/app
+    extra_hosts:
+      - "host:host-gateway"
+    networks:
+      - app-network
+
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - "2080:8080"
+    networks:
+      - app-network
+
+  db:
+    image: postgres
+    restart: always
+    ports:
+      - 5432:${POSTGRES_PORT}
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - app-network
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: unless-stopped
+    tty: true
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD}
+    command: [ 'redis-server', '--appendonly yes', '--requirepass $REDIS_PASSWORD' ]
+    volumes:
+      - redisdata:/data
+    networks:
+      - app-network
+
+  frontend:
+    build:
+      context: frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    restart: unless-stopped
+    tty: true
+    working_dir: /var/www/app
+    volumes:
+      - ./frontend:/var/www/app
+    ports:
+      - "3000:3000"
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  pgdata:
+    driver: local
+  redisdata:
+    driver: local
