@@ -5,14 +5,10 @@ require('@openzeppelin/hardhat-upgrades');
 const { config: dotEnvConfig } = require('dotenv');
 dotEnvConfig({ path: __dirname + '/.env' });
 
-const mnemonic = process.env.MNEMONIC;
-
-if (!mnemonic) {
-  throw new Error('env MNEMONIC not set');
-}
+const mnemonic = process.env.MNEMONIC || 'test test test test test test test test test test test junk';
 
 const accounts = {
-  mnemonic: process.env.MNEMONIC,
+  mnemonic,
   path: "m/44'/60'/0'/0",
   initialIndex: 0,
 };
