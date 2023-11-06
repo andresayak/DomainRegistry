@@ -36,7 +36,7 @@ module.exports = {
     },
     ethereum_sepolia: {
       chainId: 11155111,
-      url: process.env.ETHEREUM_SEPOLIA_PROVIDER_URL,
+      url: process.env.ETHEREUM_SEPOLIA_PROVIDER_URL || 'https://ethereum-sepolia.publicnode.com',
       accounts
     }
   }
