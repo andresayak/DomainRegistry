@@ -55,7 +55,9 @@ export class RewardController {
     const contract = new Contract(contractAddress, DomainRegistryAbi, wallet);
 
     const tx = await contract.withdrawReward(account);
-    return tx.hash;
+    return {
+      tx,
+    };
   }
 
   @Post('withdrawRewardToken')
@@ -80,8 +82,9 @@ export class RewardController {
       throw new Error(`env DOMAIN_REGISTRY_ADDRESS_${chainId} not set`);
     }
     const contract = new Contract(contractAddress, DomainRegistryAbi, wallet);
-
     const tx = await contract.withdrawRewardToken(account, tokenAddress);
-    return tx.hash;
+    return {
+      tx,
+    };
   }
 }

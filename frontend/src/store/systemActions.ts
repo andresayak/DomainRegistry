@@ -28,6 +28,31 @@ export const rewardListByOwner = (chainId: number, account: string) => {
   return fetch(prefix + 'rewards/' + chainId + '/byAccount/' + account);
 };
 
+export const getRewardEth = (chainId: number, account: string) => {
+  return fetch(prefix + 'rewards/' + chainId + '/withdrawReward', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      account
+    }),
+  });
+};
+
+export const getRewardToken = (chainId: number, account: string, tokenAddress: string) => {
+  return fetch(prefix + 'rewards/' + chainId + '/withdrawRewardToken', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      account, tokenAddress
+    }),
+  });
+};
+
+
 export const domainListByOwner = (chainId: number, owner: string) => {
   return fetch(prefix + 'domains/' + chainId + '/byOwner/' + owner);
 };

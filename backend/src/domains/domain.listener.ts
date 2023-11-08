@@ -1,6 +1,6 @@
 import { OnEvent } from '@nestjs/event-emitter';
 import { Injectable } from '@nestjs/common';
-import { MoreThan, Repository } from 'typeorm';
+import { IsNull, LessThan, MoreThan, Repository } from "typeorm";
 import { RewardEntity, DomainEntity } from './entities';
 import { InjectRepository } from '@nestjs/typeorm';
 
@@ -172,7 +172,7 @@ export class DomainListener {
       const rewardEntity = await this.rewardRepository.findOne({
         where: {
           chainId,
-          tokenAddress: null,
+          tokenAddress: IsNull(),
           account,
         },
       });
@@ -233,7 +233,7 @@ export class DomainListener {
       const rewardEntity = await this.rewardRepository.findOne({
         where: {
           chainId,
-          tokenAddress: null,
+          tokenAddress: IsNull(),
           account,
         },
       });
@@ -271,12 +271,12 @@ export class DomainListener {
       .where([
         {
           id: rewardEntity.id,
-          blockNumber: MoreThan(blockNumber),
+          blockNumber: LessThan(blockNumber),
         },
         {
           id: rewardEntity.id,
           blockNumber,
-          logIndex: MoreThan(logIndex),
+          logIndex: LessThan(logIndex),
         },
       ])
       .execute();
