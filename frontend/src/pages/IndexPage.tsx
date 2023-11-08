@@ -5,13 +5,16 @@ import { useEthers } from '@usedapp/core';
 import { DomainRegistryModal } from '../components/modals/DomainRegistryModal';
 import { ConfigType } from '../store/systemReducer';
 import { DomainResolveModal } from '../components/modals/DomainResolveModal';
+import { Loader } from '../components/Loader';
 
 const Component = ({configs}: {
   configs: ConfigType
 }) => {
   const { account, chainId } = useEthers();
-  if (!account || !chainId) {
-    return null;
+  if (!account || !chainId || !configs['DOMAIN_REGISTRY_ADDRESS']) {
+    return <div>
+      <Loader isShow={true}/>
+    </div>;
   }
 
   return <div className='mt-5 py-5'>

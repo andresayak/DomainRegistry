@@ -2,7 +2,6 @@ import React, { useEffect } from 'react';
 import { connect } from 'react-redux';
 import { systemMainFetch } from '../store/systemActions';
 import { useEthers } from '@usedapp/core';
-import { Loader } from './Loader';
 
 const Component = (props: {
   children: React.ReactElement;
@@ -10,7 +9,6 @@ const Component = (props: {
   systemMainFetch: (chainId: number)=>void
 }) => {
   const { chainId } = useEthers();
-
   const { systemMainFetch, loaded } = props;
   useEffect(() => {
     if (chainId) {
@@ -18,7 +16,7 @@ const Component = (props: {
     }
   }, [chainId, loaded]);
   return <div className='d-flex flex-column h-100'>
-    {loaded?props.children:<Loader isShow/>}
+    {props.children}
   </div>;
 };
 

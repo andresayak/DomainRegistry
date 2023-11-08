@@ -61,7 +61,6 @@ const Component = () => {
     return <></>;
   }
 
-  const itemEth = items.find((item) => !item.tokenAddress);
   return <>
     <div className="mt-5 py-5">
       <Breadcrumb>
@@ -78,24 +77,11 @@ const Component = () => {
         <div className="flex-fill">
           <PageTitle title={'My rewards'} />
         </div>
-        <div>
-          <Loader isShow={loading} />
-
-        </div>
       </div>
-
       <Row>
         <Col sm={12}>
-          <RewardList getReward={(token) => rewardToken(token)} account={account}
-            chainId={chainId} items={items.filter(item => item.tokenAddress)} />
-        </Col>
-        <Col sm={12}>
-          {itemEth ? <div className="d-flex">
-            <div className="px-3">
-              Reward <b>ETH</b>: {ethers.utils.formatEther(itemEth.balance)}
-            </div>
-            <Button color="primary" onClick={() => rewardEth()}>Get a ETH reward</Button>
-          </div> : <div>No ETH reward</div>}
+          <RewardList getReward={(token?) => token?rewardToken(token):rewardEth()} account={account}
+            chainId={chainId} items={items} />
         </Col>
       </Row>
     </div>

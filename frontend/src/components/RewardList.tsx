@@ -24,7 +24,7 @@ export const RewardList = (props: PropType) => {
       {items.map((item, index) => {
         return <tr key={index}>
           <td>
-            {item.tokenAddress}
+            {item.tokenAddress??'ETH'}
           </td>
           <td>
             {ethers.utils.formatEther(item.balance)}
