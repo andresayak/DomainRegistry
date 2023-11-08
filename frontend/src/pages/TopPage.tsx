@@ -46,6 +46,7 @@ const Component = () => {
           TOP domains
         </BreadcrumbItem>
       </Breadcrumb>
+      
       <div className='d-flex'>
         <div className='flex-fill'>
           <PageTitle title={'TOP domains'} />

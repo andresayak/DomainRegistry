@@ -7,8 +7,8 @@ async function main() {
   const addresses = [];
 
   for (const [value, decimals] of [
-    [0.5, 18],
-    [1, 2],
+    [1, 18],
+    [0.5, 2],
     [59, 6],
   ]) {
     const contract = await hre.ethers.getContractFactory('Aggregator');

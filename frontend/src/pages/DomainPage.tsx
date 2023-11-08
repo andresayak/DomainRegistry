@@ -54,7 +54,6 @@ const Component = () => {
     }
     return list;
   };
-  console.log('path', path(domain));
   return <>
     <div className='mt-5 py-5'>
       <Breadcrumb>

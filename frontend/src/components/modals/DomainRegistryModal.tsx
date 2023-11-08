@@ -25,8 +25,6 @@ const getParentDomainName = (domain: string) => {
   return match ? match[1] : null;
 };
 
-
-
 export function DomainRegistryModal(props: PropType) {
   const { library } = useEthers();
   const { account, children, chainId, contractAddress } = props;
@@ -163,50 +161,52 @@ export function DomainRegistryModal(props: PropType) {
             </NavItem>
           </Nav>
           {paymentMethod == 'ERC20' && <>
-              {!token ? <TokenList
-                account={account} chainId={chainId}
-                selectToken={(token) => setPaymentToken(token)}
-                spenderAddress={contractAddress} /> : <div>
-                <ChainLinkAggregatorWrapper aggregatorAddress={token.feedAddress} costInUsd={finaleCostInUsd} children={(price, _, value) => <>
-
-                    {!!token && <>
-                      <TokenWrap
-                        tokenAddress={token.address} account={account} setErrors={setErrors}
-                        spenderAddress={contractAddress} children={(tokenData: TokenDataType) => {
-                        const currentAllowanceBN = !tokenData || allowanceBN.gt(tokenData.allowanceBN) ? allowanceBN : tokenData.allowanceBN;
-                        return <>
-                          <ModalBody>
-                            <div className='d-flex'>
-                              <div className='flex-fill'>
-                                <div>Token: <b>{token.symbol}</b></div>
-                                <div>Balance: <b>{ethers.utils.formatUnits(tokenData.balance, tokenData.decimals)} {token.symbol}</b></div>
-                                <div>Exchange rate: <b>{price.toFixed(2)} USD</b></div>
-                                <div>Cost in Token: <b>{ethers.utils.formatEther(value)} {token.symbol}</b></div>
-                              </div>
-                              <div>
-                                <a className='small' onClick={() => setPaymentToken(undefined)}>Edit</a>
-                              </div>
+            {!token ? <TokenList
+              account={account} chainId={chainId}
+              selectToken={(token) => setPaymentToken(token)}
+              spenderAddress={contractAddress} /> : <div>
+              <ChainLinkAggregatorWrapper aggregatorAddress={token.feedAddress} costInUsd={finaleCostInUsd} children={(price, _, value) => <>
+                {!!token && <>
+                  <TokenWrap
+                    tokenAddress={token.address} account={account} setErrors={setErrors}
+                    spenderAddress={contractAddress} children={(tokenData: TokenDataType) => {
+                      const currentAllowanceBN = !tokenData || allowanceBN.gt(tokenData.allowanceBN) ? allowanceBN : tokenData.allowanceBN;
+                      return <>
+                        <ModalBody>
+                          <div className='d-flex'>
+                            <div className='flex-fill'>
+                              <div>Token: <b>{token.symbol}</b></div>
+                              <div>Balance: <b>{ethers.utils.formatUnits(tokenData.balance, tokenData.decimals)} {token.symbol}</b></div>
+                              <div>Exchange rate: <b>{price.toFixed(2)} USD</b></div>
+                              <div>Cost in Token: <b>{ethers.utils.formatEther(value)} {token.symbol}</b></div>
                             </div>
-                          </ModalBody>
-                          <ModalFooter>
-                            <ApproveToken
-                              allowanceBN={currentAllowanceBN}
-                              tokenAddress={token.address}
-                              spenderAddress={contractAddress}
-                              amountBN={value}
-                              callback={(value) => setAllowance(value)} />
-                            <DomainRegistryWithTokenButton
-                              disabled={currentAllowanceBN.lt(value)}
-                              token={token}
-                              amount={value}
-                              contractAddress={contractAddress}
-                              callback={toggle}
-                              values={values} />
-                          </ModalFooter>
-                        </>}}/>
-                    </>}
-                </>}/>
-              </div>}
+                            <div>
+                              <a className='small' onClick={() => setPaymentToken(undefined)}>Edit</a>
+                            </div>
+                          </div>
+                        </ModalBody>
+                        <ModalFooter>
+                          <ApproveToken
+                            allowanceBN={currentAllowanceBN}
+                            tokenAddress={token.address}
+                            spenderAddress={contractAddress}
+                            amountBN={value}
+                            callback={(value) => setAllowance(value)} />
+                          <DomainRegistryWithTokenButton
+                            disabled={currentAllowanceBN.lt(value)}
+                            additionalPriceBN={additionalPriceBN}
+                            token={token}
+                            amount={value}
+                            contractAddress={contractAddress}
+                            callback={()=>{
+                              setTimeout(()=>toggle(), 5000);
+                            }}
+                            values={values} />
+                        </ModalFooter>
+                      </>}}/>
+                </>}
+              </>}/>
+            </div>}
           </>}
           {paymentMethod == 'NATIVE' &&
             <ChainLinkAggregatorWrapper aggregatorAddress={baseAggregator} slippage costInUsd={finaleCostInUsd} children={(price, slippage, value) => <>
@@ -220,8 +220,8 @@ export function DomainRegistryModal(props: PropType) {
                 </div>
               </ModalBody>
               <ModalFooter>
-                <DomainRegistryWithEthButton value={value} values={values} contractAddress={contractAddress} callback={() => {
-                  toggle();
+                <DomainRegistryWithEthButton value={value} additionalPriceBN={additionalPriceBN} values={values} contractAddress={contractAddress} callback={() => {
+                  setTimeout(()=>toggle(), 5000);
                 }} disabled={false} />
               </ModalFooter>
             </>} />}

@@ -19,12 +19,8 @@ export class RewardEntity extends BaseEntity<RewardEntity> {
   @Column({
     name: 'balance',
     type: 'varchar',
-    transformer: {
-      to: (value: bigint) => value,
-      from: (value: string) => BigInt(value),
-    },
   })
-  balance: bigint;
+  balance: string;
 
   @Column({ name: 'block_number', type: 'integer', default: 0 })
   blockNumber: number;

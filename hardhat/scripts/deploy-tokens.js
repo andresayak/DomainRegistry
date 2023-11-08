@@ -5,7 +5,7 @@ dotEnvConfig({ path: __dirname + '/.env' });
 
 async function main() {
   const addresses = [];
-  for (const symbol of ['WETH', 'WBTC']) {
+  for (const symbol of ['LINK', 'BTC', 'CZK']) {
     const totalSupply = BigInt(1_000_000 * (10 ** 18));
 
     const contract = await hre.ethers.getContractFactory('TestToken');

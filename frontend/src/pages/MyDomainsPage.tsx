@@ -1,28 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { connect } from 'react-redux';
-import { Breadcrumb, BreadcrumbItem, Col, Row } from 'reactstrap';
-import { PageTitle } from '../components/PageTitle';
-import { toast } from 'react-toastify';
-import { Link, useLocation } from 'react-router-dom';
-import { useEthers } from '@usedapp/core';
-import { Loader } from '../components/Loader';
-import { DomainList } from '../components/DomainList';
-import { DomainType } from '../types/domain';
-import { domainListByOwner } from '../store/systemActions';
-
-function useQuery() {
-  const { search } = useLocation();
-
-  return React.useMemo(() => {
-    return Object.fromEntries(new URLSearchParams(search).entries());
-  }, [search]);
-}
+import React, {useCallback, useEffect, useState} from 'react';
+import {connect} from 'react-redux';
+import {Breadcrumb, BreadcrumbItem, Col, Row} from 'reactstrap';
+import {PageTitle} from '../components/PageTitle';
+import {toast} from 'react-toastify';
+import {Link} from 'react-router-dom';
+import {useEthers} from '@usedapp/core';
+import {Loader} from '../components/Loader';
+import {DomainList} from '../components/DomainList';
+import {DomainType} from '../types/domain';
+import {domainListByOwner} from '../store/systemActions';
 
 const Component = () => {
-  const { account, chainId } = useEthers();
-  const query = useQuery();
-  const defaultTab = 'wait';
-  const currentTab = query['tab'] ? query['tab'] : defaultTab;
+  const {account, chainId} = useEthers();
   const [loading, setLoading] = useState<boolean>(false);
   const [items, setItems] = useState<DomainType[]>([]);
 
@@ -52,24 +41,24 @@ const Component = () => {
       <Breadcrumb>
         <BreadcrumbItem>
           <Link to="/">
-            Home
+                        Home
           </Link>
         </BreadcrumbItem>
         <BreadcrumbItem active>
-          My domains
+                    My domains
         </BreadcrumbItem>
       </Breadcrumb>
       <div className='d-flex'>
         <div className='flex-fill'>
-          <PageTitle title={'My domains'} />
+          <PageTitle title={'My domains'}/>
         </div>
         <div>
-          <Loader isShow={loading} />
+          <Loader isShow={loading}/>
         </div>
       </div>
       <Row>
         <Col sm={12}>
-          <DomainList account={account} chainId={chainId} items={items} />
+          <DomainList account={account} chainId={chainId} items={items}/>
         </Col>
       </Row>
     </div>

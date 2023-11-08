@@ -22,9 +22,13 @@ async function main() {
 
   const contract = await hre.ethers.getContractAt('DomainRegistry', process.env.CONTRACT_ADDRESS, owner);
 
+  //const aggregators = process.env.AGGREGATORS_ADDRESSES.split(',');
+  //const tx = await contract.initializeV3(mainPrice, aggregators[0], process.env.TOKEN_ADDRESSES.split(','), aggregators);
+
   const tx = await contract.initializeV3(mainPrice, '0x694AA1769357215DE4FAC081bf1f309aDC325306', process.env.TOKEN_ADDRESSES.split(','), [
-    '0x694AA1769357215DE4FAC081bf1f309aDC325306',//WETH
-    '0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43'//BTC
+    '0x48731cF7e84dc94C5f84577882c14Be11a5B7456',//WETH
+    '0x1b44F3514812d835EB1BDB0acB33d3fA3351Ee43',//BTC
+    '0xAE45DCb3eB59E27f05C170752B218C6174394Df8',//CZK
   ]);
   await tx.wait();
 

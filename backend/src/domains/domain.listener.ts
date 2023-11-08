@@ -1,9 +1,8 @@
 import { OnEvent } from '@nestjs/event-emitter';
 import { Injectable } from '@nestjs/common';
 import { MoreThan, Repository } from 'typeorm';
-import { RewardEntity, DomainEntity, TokenEntity } from './entities';
+import { RewardEntity, DomainEntity } from './entities';
 import { InjectRepository } from '@nestjs/typeorm';
-import * as console from 'console';
 
 const getParentDomainName = (domain: string) => {
   const match = domain.match(/^[^\.]+\.(.+)$/);
@@ -17,8 +16,6 @@ export class DomainListener {
     private readonly rewardRepository: Repository<RewardEntity>,
     @InjectRepository(DomainEntity)
     private readonly domainRepository: Repository<DomainEntity>,
-    @InjectRepository(TokenEntity)
-    private readonly tokenRepository: Repository<TokenEntity>,
   ) {}
 
   @OnEvent('contractEvents', { async: true })
@@ -37,12 +34,8 @@ export class DomainListener {
   }
 
   async handleContractEvent({ chainId, blockNumber, event }: any) {
-    console.log('event', chainId, blockNumber, event);
     const { logIndex } = event;
-    if (
-      event.name === 'DomainReserved' ||
-      event.name === 'DomainReservedByToken'
-    ) {
+    if (event.name === 'DomainReserved' || event.name === 'DomainReservedByToken') {
       const {
         sender,
         domain,
@@ -95,9 +88,7 @@ export class DomainListener {
         domainEntity = await this.domainRepository.save(new DomainEntity(data));
         console.log('domainEntity', domainEntity);
       } catch (e) {
-        if (
-          !e.toString().match(/duplicate key value violates unique constraint/)
-        ) {
+        if (!e.toString().match(/duplicate key value violates unique constraint/)) {
           throw e;
         }
         await this.domainRepository.update(
@@ -110,10 +101,7 @@ export class DomainListener {
       }
     }
 
-    if (
-      event.name === 'DomainContinue' ||
-      event.name === 'DomainContinueByToken'
-    ) {
+    if (event.name === 'DomainContinue' || event.name === 'DomainContinueByToken') {
       const { domain, owner, finishedAt } = event.args;
       console.log('DomainContinue', {
         domain,
@@ -175,6 +163,7 @@ export class DomainListener {
         account: string;
         amount: bigint;
       } = event.args;
+
       console.log('RewardAdded', {
         account,
         amount,
@@ -189,19 +178,14 @@ export class DomainListener {
       });
 
       if (rewardEntity) {
-        await this.updateRewardBalance(
-          rewardEntity,
-          rewardEntity.balance + amount,
-          blockNumber,
-          logIndex,
-        );
+        await this.updateRewardBalance(rewardEntity, BigInt(rewardEntity.balance) + amount, blockNumber, logIndex);
       } else {
         await this.rewardRepository.save(
           new RewardEntity({
             chainId,
             tokenAddress: null,
             account,
-            balance: amount,
+            balance: amount.toString(),
             blockNumber,
             logIndex,
           }),
@@ -225,12 +209,7 @@ export class DomainListener {
       });
 
       if (rewardEntity) {
-        await this.updateRewardBalance(
-          rewardEntity,
-          rewardEntity.balance + amount,
-          blockNumber,
-          logIndex,
-        );
+        await this.updateRewardBalance(rewardEntity, BigInt(rewardEntity.balance) + amount, blockNumber, logIndex);
       } else {
         await this.rewardRepository.save(
           new RewardEntity({
@@ -258,12 +237,7 @@ export class DomainListener {
           account,
         },
       });
-      await this.updateRewardBalance(
-        rewardEntity,
-        rewardEntity.balance - amount,
-        blockNumber,
-        logIndex,
-      );
+      await this.updateRewardBalance(rewardEntity, BigInt(rewardEntity.balance) - amount, blockNumber, logIndex);
     }
 
     if (event.name === 'WithdrawRewardToken') {
@@ -281,28 +255,18 @@ export class DomainListener {
           account,
         },
       });
-      await this.updateRewardBalance(
-        rewardEntity,
-        rewardEntity.balance - amount,
-        blockNumber,
-        logIndex,
-      );
+      await this.updateRewardBalance(rewardEntity, BigInt(rewardEntity.balance) - amount, blockNumber, logIndex);
     }
   }
 
-  async updateRewardBalance(
-    rewardEntity: RewardEntity,
-    newBalance: bigint,
-    blockNumber: number,
-    logIndex: number,
-  ) {
+  async updateRewardBalance(rewardEntity: RewardEntity, newBalance: bigint, blockNumber: number, logIndex: number) {
     const { affected } = await this.rewardRepository
       .createQueryBuilder()
       .update()
       .set({
         blockNumber,
         logIndex,
-        balance: newBalance,
+        balance: newBalance.toString(),
       })
       .where([
         {

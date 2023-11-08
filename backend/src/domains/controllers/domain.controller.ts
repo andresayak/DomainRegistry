@@ -6,7 +6,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { ChainIdPipe } from '../../common/chainId.pipe';
 
 @Controller('domains/:chainId')
-@ApiTags('Domains operations')
+@ApiTags('Domains')
 export class DomainController {
   constructor(
     @InjectRepository(DomainEntity)
@@ -28,9 +28,7 @@ export class DomainController {
   }
 
   @Get('soon-to-expire')
-  soon(
-    @Param('chainId', ChainIdPipe) chainId: number,
-  ): Promise<DomainEntity[]> {
+  soon(@Param('chainId', ChainIdPipe) chainId: number): Promise<DomainEntity[]> {
     return this.domainRepository.find({
       where: {
         chainId,
@@ -43,10 +41,7 @@ export class DomainController {
   }
 
   @Get(':name')
-  async info(
-    @Param('chainId', ChainIdPipe) chainId: number,
-    @Param('name') name: string,
-  ): Promise<DomainEntity> {
+  async info(@Param('chainId', ChainIdPipe) chainId: number, @Param('name') name: string): Promise<DomainEntity> {
     const domain = await this.domainRepository.findOneBy({
       chainId,
       name,
@@ -58,10 +53,7 @@ export class DomainController {
   }
 
   @Get(':name/children')
-  async children(
-    @Param('chainId', ChainIdPipe) chainId: number,
-    @Param('name') name: string,
-  ): Promise<DomainEntity[]> {
+  async children(@Param('chainId', ChainIdPipe) chainId: number, @Param('name') name: string): Promise<DomainEntity[]> {
     const domain = await this.domainRepository.findOneBy({
       chainId,
       name,

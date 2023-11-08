@@ -14,17 +14,16 @@ export const ChainLinkAggregatorWrapper = (props: {
   const contract = new Contract(aggregatorAddress, AggregatorAbi);
   const result = useCalls([{
     contract,
-    method: "latestRoundData",
+    method: 'latestRoundData',
     args: [],
   }, {
     contract,
-    method: "decimals",
+    method: 'decimals',
     args: [],
   }]);
-
   if (result && result.every((item) => item && !item.error)) {
     const [
-      [_, price],
+      [, price],
       [decimals],
     ] = result.map((item) => item ? item.value : undefined);
     const rateInUsd = Number(price) / Number(10n ** BigInt(decimals));

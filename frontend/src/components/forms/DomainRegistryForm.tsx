@@ -21,8 +21,8 @@ export const DomainRegistryForm = ({ values, onChange, errors, isFree }: {
     <FormGroup className='mr-1'>
       <Label>Domain Name</Label>
       <Input invalid={isError('name') || isFree === false} value={values.name} type='text' name='name'
-             valid={isFree === true}
-             onChange={(e) => onChange('name', e.currentTarget.value)} />
+        valid={isFree === true}
+        onChange={(e) => onChange('name', e.currentTarget.value)} />
       {isFree === true && <FormFeedback valid>
         Sweet! that name is available
       </FormFeedback>}
@@ -34,15 +34,15 @@ export const DomainRegistryForm = ({ values, onChange, errors, isFree }: {
     {isFree === true && <FormGroup className='mr-1'>
       <Label>Registration periods (years)</Label>
       <Input invalid={isError('periods')} value={values.periods} type='number' min='1' max='65535'
-             name='periods'
-             onChange={(e) => onChange('periods', e.currentTarget.value)} />
+        name='periods'
+        onChange={(e) => onChange('periods', e.currentTarget.value)} />
       {renderErrors('periods')}
     </FormGroup>}
     {isFree === true && <FormGroup className='mr-1'>
       <Label>Addition price for subdomains (USD)</Label>
       <Input invalid={isError('additionalPrice')} value={values.additionalPrice} type='number' min='0'
-             name='additionalPrice'
-             onChange={(e) => onChange('additionalPrice', e.currentTarget.value)} />
+        name='additionalPrice'
+        onChange={(e) => onChange('additionalPrice', e.currentTarget.value)} />
       {renderErrors('additionalPrice')}
     </FormGroup>}
   </div>;

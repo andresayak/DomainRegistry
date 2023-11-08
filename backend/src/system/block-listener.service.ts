@@ -3,15 +3,13 @@ import * as DomainRegistryAbi from '../abi/DomainRegistryAbi.json';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 
 export class BlockListenerService {
-  private readonly iface: ethers.Interface = new ethers.Interface(
-    DomainRegistryAbi,
-  );
+  private readonly iface: ethers.Interface = new ethers.Interface(DomainRegistryAbi);
   private currentBlock: number;
   private synced = false;
 
   constructor(
     private readonly eventEmitter: EventEmitter2,
-    private readonly provider: ethers.WebSocketProvider,
+    private readonly provider: ethers.JsonRpcProvider,
     private readonly chainId: number,
     private readonly contractAddress: string,
     private lastBlock: number,
@@ -28,16 +26,16 @@ export class BlockListenerService {
       }
     });
     if (this.lastBlock && this.currentBlock > this.lastBlock) {
-      for (
-        let blockNumber = this.lastBlock + 1;
-        blockNumber <= this.currentBlock;
-        blockNumber++
-      ) {
+      for (let blockNumber = this.lastBlock + 1; blockNumber <= this.currentBlock; blockNumber++) {
         await this.processBlock(blockNumber);
         await this.processedBlock(blockNumber);
       }
     }
     this.synced = true;
+  }
+
+  destroy() {
+    return this.provider.off('block');
   }
 
   async processBlock(blockNumber: number) {

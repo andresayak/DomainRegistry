@@ -14,7 +14,7 @@ export class TokenController {
   ) {}
 
   @Get()
-  async byAccount(@Param('chainId', ChainIdPipe) chainId: number) {
+  async list(@Param('chainId', ChainIdPipe) chainId: number) {
     return this.tokenRepository.find({
       where: {
         chainId,

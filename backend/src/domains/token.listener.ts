@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 import { TokenEntity } from './entities';
 import { InjectRepository } from '@nestjs/typeorm';
 import * as console from 'console';
-import { Contract, Wallet } from 'ethers';
+import { Contract, HDNodeWallet } from 'ethers';
 import { ProviderFactory } from '../system/provider.factory';
 import * as ERC20MetadataAbi from '../abi/ERC20MetadataAbi.json';
 
@@ -14,7 +14,7 @@ export class TokenListener {
     @InjectRepository(TokenEntity)
     private readonly tokenRepository: Repository<TokenEntity>,
     @Inject('MAIN_WALLET')
-    private readonly wallet: Wallet,
+    private readonly wallet: HDNodeWallet,
     private readonly providerFactoryService: ProviderFactory,
   ) {}
 
@@ -33,19 +33,14 @@ export class TokenListener {
     }
   }
 
-  async handleContractEvent({ chainId, blockNumber, event }: any) {
-    console.log('event', chainId, blockNumber, event);
-
+  async handleContractEvent({ chainId, event }: any) {
     if (event.name === 'BaseTokenAdded') {
       const { token, feed } = event.args;
       console.log('BaseTokenAdded', {
         token,
         feed,
       });
-      const { name, symbol, decimals } = await this.fetchTokenData(
-        chainId,
-        token,
-      );
+      const { name, symbol, decimals } = await this.fetchTokenData(chainId, token);
       try {
         await this.tokenRepository.save(
           new TokenEntity({
@@ -58,9 +53,7 @@ export class TokenListener {
           }),
         );
       } catch (e) {
-        if (
-          !e.toString().match(/duplicate key value violates unique constraint/)
-        ) {
+        if (!e.toString().match(/duplicate key value violates unique constraint/)) {
           throw e;
         }
       }
@@ -79,7 +72,7 @@ export class TokenListener {
   }
 
   async fetchTokenData(chainId: number, tokenAddress: string) {
-    const provider = this.providerFactoryService.create(chainId, 'http');
+    const provider = this.providerFactoryService.create(chainId);
     const wallet = this.wallet.connect(provider);
 
     const contract = new Contract(tokenAddress, ERC20MetadataAbi, wallet);

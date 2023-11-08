@@ -4,6 +4,7 @@ import { Button, Col, Row } from 'reactstrap';
 import { useEthers } from '@usedapp/core';
 import { DomainRegistryModal } from '../components/modals/DomainRegistryModal';
 import { ConfigType } from '../store/systemReducer';
+import { DomainResolveModal } from '../components/modals/DomainResolveModal';
 
 const Component = ({configs}: {
   configs: ConfigType
@@ -12,6 +13,7 @@ const Component = ({configs}: {
   if (!account || !chainId) {
     return null;
   }
+
   return <div className='mt-5 py-5'>
     <Row>
       <Col sm={6}>
@@ -25,6 +27,21 @@ const Component = ({configs}: {
                 account={account} chainId={chainId}
                 contractAddress={configs['DOMAIN_REGISTRY_ADDRESS']}
                 children={(toggle) => <Button onClick={toggle} color='primary' size="lg">Register</Button>} />
+            </div>
+          </div>
+        </div>
+      </Col>
+      <Col sm={6}>
+        <div className='card-deck mb-3 text-center'>
+          <div className='card mb-4 box-shadow'>
+            <div className='card-header'>
+              <h4 className='my-0 font-weight-normal'>Domain resolver</h4>
+            </div>
+            <div className='card-body'>
+              <DomainResolveModal
+                account={account} chainId={chainId}
+                contractAddress={configs['DOMAIN_REGISTRY_ADDRESS']}
+                children={(toggle) => <Button onClick={toggle} color='primary' size="lg">Resolve</Button>} />
             </div>
           </div>
         </div>
