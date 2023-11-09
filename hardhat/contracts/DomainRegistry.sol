@@ -222,7 +222,7 @@ contract DomainRegistry is OwnableUpgradeable {
     /// of periods.
     /// @param _domain The domain name to be reserved.
     /// @param _periods The number of periods for which the domain will be reserved.
-    /// @param _tokenAddress
+    /// @param _tokenAddress The token address
     /// @param _additionalPrice The additional price for domain registration.
     function reserveDomainByToken(string memory _domain, uint8 _periods, address _tokenAddress, uint _additionalPrice) external virtual {
         _domain = Utils.clearDomain(_domain);
