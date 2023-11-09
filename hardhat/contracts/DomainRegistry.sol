@@ -181,7 +181,7 @@ contract DomainRegistry is OwnableUpgradeable {
     }
 
     /// @notice Get the token reward of a domain's owner.
-    /// @param _domain The domain owner
+    /// @param _account The domain owner
     /// @param _tokenAddress The token address
     /// @return reward.
     function rewardByToken(address _account, address _tokenAddress) external view returns(uint){
