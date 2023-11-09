@@ -21,7 +21,7 @@ export const ApproveToken = (props: PropType) => {
   const [attems, setAttems] = useState<number>(0);
 
   const approved = allowanceBN.gte(amountBN);
-  let disabled = forceDisabled || approved;
+  const disabled = forceDisabled || approved;
   useMemo(() => {
     if (state.status == 'Exception')
       if (state.errorMessage)
@@ -33,11 +33,11 @@ export const ApproveToken = (props: PropType) => {
   }, [state.status, attems, events]);
 
   return <Button color='primary' size={'lg'} block className='mr-1'
-                 disabled={(state.status != 'None' && state.status != 'Exception') || disabled}
-                 onClick={() => {
-                   setAttems(attems + 1);
-                   send(spenderAddress, amountBN);
-                 }}>
+    disabled={(state.status != 'None' && state.status != 'Exception') || disabled}
+    onClick={() => {
+      setAttems(attems + 1);
+      send(spenderAddress, amountBN);
+    }}>
     {state.status == 'Mining' ? 'Mining...' : (approved ? 'Approved' : 'Approve')}
   </Button>;
 };

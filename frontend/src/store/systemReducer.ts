@@ -13,9 +13,9 @@ const initialState = {
 
 export default function reducer(state = initialState, action: any) {
   switch (action.type) {
-    case types.SYSTEM_SET_CONFIG:
-      return { ...state, loaded: true, configs: action.data };
-    default:
-      return state;
+  case types.SYSTEM_SET_CONFIG:
+    return { ...state, loaded: true, configs: action.data };
+  default:
+    return state;
   }
 }

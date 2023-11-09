@@ -1,7 +1,7 @@
 import * as types from './constants';
 import { Dispatch } from 'redux';
 
-const prefix = 'http://localhost:5000/api/';
+const prefix = process.env.APP_API_ORIGIN;
 export const systemMainFetch = (dispatch: Dispatch, chainId: number) => {
   return fetch(prefix + 'system/main/' + chainId).then(response => response.json()).then(response => {
     dispatch({
@@ -51,7 +51,6 @@ export const getRewardToken = (chainId: number, account: string, tokenAddress: s
     }),
   });
 };
-
 
 export const domainListByOwner = (chainId: number, owner: string) => {
   return fetch(prefix + 'domains/' + chainId + '/byOwner/' + owner);

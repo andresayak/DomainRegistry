@@ -59,12 +59,12 @@ export const TokenList = (props: PropType) => {
     return null;
   }
   return <>
-      <div className='tokenList my-2'>
-        {items.map((token, index) => {
-          return <React.Fragment key={index}>
-            <RenderTokenItem selectToken={selectTokenAndSaveToRecent} token={token} />
-          </React.Fragment>;
-        })}
-      </div>
+    <div className='tokenList my-2'>
+      {items.map((token, index) => {
+        return <React.Fragment key={index}>
+          <RenderTokenItem selectToken={selectTokenAndSaveToRecent} token={token} />
+        </React.Fragment>;
+      })}
+    </div>
   </>;
 };

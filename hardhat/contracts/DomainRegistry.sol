@@ -39,12 +39,10 @@ contract DomainRegistry is OwnableUpgradeable {
     event MainPriceChanged(uint mainPrice);
     event PaymentPeriodChanged(uint paymentPeriod);
     event FeeChanged(uint fee);
-
     event WithdrawReward(address indexed account, uint amount);
     event WithdrawRewardToken(address indexed account, address indexed token, uint amount);
     event RewardAdded(address indexed account, uint amount);
     event RewardAddedToken(address indexed account, address token, uint amount);
-
     event AdditionalPriceChanged(address indexed sender, string indexed domainTopic, string domain, uint amount);
     event BaseTokenAdded(address indexed token, address feed);
     event BaseTokenRemoved(address indexed token);
@@ -182,6 +180,10 @@ contract DomainRegistry is OwnableUpgradeable {
         return registryByName[_domain].additionalPrice + mainPrice;
     }
 
+    /// @notice Get the token reward of a domain's owner.
+    /// @param _domain The domain owner
+    /// @param _tokenAddress The token address
+    /// @return reward.
     function rewardByToken(address _account, address _tokenAddress) external view returns(uint){
         return tokenRewards[_account][_tokenAddress];
     }
@@ -192,6 +194,7 @@ contract DomainRegistry is OwnableUpgradeable {
     /// of periods.
     /// @param _domain The domain name to be reserved.
     /// @param _periods The number of periods for which the domain will be reserved.
+    /// @param _additionalPrice The additional price for domain registration.
     function reserveDomain(string memory _domain, uint8 _periods, uint _additionalPrice) external virtual payable noReentrant{
         _domain = Utils.clearDomain(_domain);
         require(_onlyFreeDomain(_domain), 'not free domain');
@@ -213,6 +216,14 @@ contract DomainRegistry is OwnableUpgradeable {
         emit DomainReserved(_msgSender(), _domain, _domain, _additionalPrice, _createdAt, _finishedAt);
     }
 
+    /// @notice Reserve a domain for a specified number of periods.
+    /// @dev Allows users to reserve a domain by providing the domain name and the number of periods they want to
+    /// reserve it for. The cost of the reservation is calculated based on the main price and the specified number
+    /// of periods.
+    /// @param _domain The domain name to be reserved.
+    /// @param _periods The number of periods for which the domain will be reserved.
+    /// @param _tokenAddress
+    /// @param _additionalPrice The additional price for domain registration.
     function reserveDomainByToken(string memory _domain, uint8 _periods, address _tokenAddress, uint _additionalPrice) external virtual {
         _domain = Utils.clearDomain(_domain);
 
@@ -355,7 +366,6 @@ contract DomainRegistry is OwnableUpgradeable {
         emit WithdrawRewardToken(_account, _tokenAddress, _rewardInToken);
     }
 
-
     /// @notice Process payments for domain reservations and extensions.
     /// @dev Internal function used to handle the payment processing for domain reservations and extensions.
     /// It calculates the cost of the reservation, verifies the provided value, and transfers funds to the contract's
@@ -409,6 +419,7 @@ contract DomainRegistry is OwnableUpgradeable {
             emit BaseTokenAdded(_baseTokens[_i], _feeds[_i]);
         }
     }
+
     /// @notice Check if a domain is free and available for registration.
     /// @dev Internal function used to determine if a specific domain is available for registration, meaning it either
     /// has no owner or its reservation has expired.

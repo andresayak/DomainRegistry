@@ -9,7 +9,7 @@ async function main() {
     throw new Error('env CONTRACT_ADDRESS not set');
   }
 
-  [_, user] = await ethers.getSigners();
+  const [ , user] = await ethers.getSigners();
 
   const mainPrice = BigInt(50 * 10 ** 18);
 
@@ -25,9 +25,9 @@ async function main() {
       const tx = await contract.reserveDomain(domain, periods, BigInt(additionalPrice * 10 ** 18), {
         value: mainPrice * BigInt(periods),
       });
+      console.log(`tx=${tx.hash}`);
       await tx.wait();
-
-      console.log(`tx=${await tx.hash}`);
+      console.log('Done!');
     } catch (e) {
       console.error(e);
     }

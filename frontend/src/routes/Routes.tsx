@@ -1,7 +1,7 @@
-import React from "react";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
-import LandingLayout from "../layouts/LandingLayout";
-import { page as pageRoutes } from "./index";
+import React from 'react';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import LandingLayout from '../layouts/LandingLayout';
+import { page as pageRoutes } from './index';
 
 interface IRouteProps {
   children: undefined | Array<any>

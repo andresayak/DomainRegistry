@@ -45,8 +45,8 @@ export class ScannerService implements OnModuleInit, OnModuleDestroy {
       console.log('DOMAIN_REGISTRY_ADDRESS', contractAddress);
       console.log('DOMAIN_REGISTRY_BLOCK', contractDeployedBlock);
       const provider = this.create(chainId);
-      //const lastBlock = parseInt(await this.redis.get('block_processed_' + chainId));
-      const lastBlock = 0;
+      const lastBlock = parseInt(await this.redis.get('block_processed_' + chainId));
+      //const lastBlock = 0;
       this.listeners.push(
         new BlockListenerService(
           this.eventEmitter,

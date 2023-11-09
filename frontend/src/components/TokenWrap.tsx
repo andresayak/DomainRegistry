@@ -1,8 +1,8 @@
-import React from "react";
-import { Contract } from "ethers";
-import { useCalls } from "@usedapp/core";
-import ERC20MetadataAbi from "../abi/ERC20MetadataAbi.json";
-import { TokenDataType } from "../types/token";
+import React from 'react';
+import { Contract } from 'ethers';
+import { useCalls } from '@usedapp/core';
+import ERC20MetadataAbi from '../abi/ERC20MetadataAbi.json';
+import { TokenDataType } from '../types/token';
 
 export const TokenWrap = (props: {
   children: (tokenData: TokenDataType) => React.ReactElement
@@ -15,23 +15,23 @@ export const TokenWrap = (props: {
     const contract = new Contract(tokenAddress, ERC20MetadataAbi);
     const result = useCalls([{
       contract,
-      method: "balanceOf",
+      method: 'balanceOf',
       args: [account],
     }, {
       contract,
-      method: "decimals",
+      method: 'decimals',
       args: [],
     }, {
       contract,
-      method: "symbol",
+      method: 'symbol',
       args: [],
     }, {
       contract,
-      method: "allowance",
+      method: 'allowance',
       args: [account, spenderAddress],
     }, {
       contract,
-      method: "name",
+      method: 'name',
       args: [],
     }]) ?? [];
     if (result && result.every((item) => item && !item.error)) {
@@ -49,10 +49,10 @@ export const TokenWrap = (props: {
       });
     }
   } catch (e) {
-    console.log("TokenWrap ERROR", e);
+    console.log('TokenWrap ERROR', e);
     if (setErrors) {
       if (e && e.toString().match(/call revert exception/)) {
-        setErrors({ tokenAddress: ["Invalid token address"] });
+        setErrors({ tokenAddress: ['Invalid token address'] });
       }
     }
   }

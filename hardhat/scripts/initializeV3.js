@@ -23,7 +23,8 @@ async function main() {
   const contract = await hre.ethers.getContractAt('DomainRegistry', process.env.CONTRACT_ADDRESS, owner);
 
   console.log(mainPrice, process.env.TOKEN_ADDRESSES.split(','), process.env.AGGREGATORS_ADDRESSES.split(','));
-  const tx = await contract.initializeV3(mainPrice, '0x694AA1769357215DE4FAC081bf1f309aDC325306', process.env.TOKEN_ADDRESSES.split(','), process.env.AGGREGATORS_ADDRESSES.split(','));
+  const tx = await contract.initializeV3(mainPrice, '0x694AA1769357215DE4FAC081bf1f309aDC325306',
+    process.env.TOKEN_ADDRESSES.split(','), process.env.AGGREGATORS_ADDRESSES.split(','));
   await tx.wait();
 
   console.log(

@@ -13,7 +13,7 @@ async function main() {
   const deploy = await upgrades.upgradeProxy(process.env.CONTRACT_ADDRESS, contractV2);
   await deploy.waitForDeployment();
 
-  console.log('Upgraded!');
+  console.log('Done!');
 }
 
 main().catch((error) => {
