@@ -1,0 +1,43 @@
+import { Contract } from '@ethersproject/contracts';
+import { useContractFunction } from '@usedapp/core';
+import React, { useMemo, useState } from 'react';
+import { toast } from 'react-toastify';
+import { Button } from 'reactstrap';
+import ERC20TokenAbi from '../../abi/ERC20Abi.json';
+import { BigNumber } from 'ethers';
+
+type PropType = {
+  disabled?: boolean;
+  allowanceBN: BigNumber;
+  amountBN: BigNumber
+  tokenAddress: string;
+  spenderAddress: string;
+  callback: (allowanceBN: BigNumber) => void;
+}
+export const ApproveToken = (props: PropType) => {
+  const { callback, disabled: forceDisabled = false, allowanceBN, amountBN, tokenAddress, spenderAddress } = props;
+  const contract = new Contract(tokenAddress, ERC20TokenAbi);
+  const { state, send, events } = useContractFunction(contract, 'approve');
+  const [attems, setAttems] = useState<number>(0);
+
+  const approved = allowanceBN.gte(amountBN);
+  const disabled = forceDisabled || approved;
+  useMemo(() => {
+    if (state.status == 'Exception')
+      if (state.errorMessage)
+        toast.error(state.errorMessage);
+    if (state.status == 'Success' && events) {
+      toast.success('Token Approved! ');
+      callback(amountBN);
+    }
+  }, [state.status, attems, events]);
+
+  return <Button color='primary' size={'lg'} block className='mr-1'
+    disabled={(state.status != 'None' && state.status != 'Exception') || disabled}
+    onClick={() => {
+      setAttems(attems + 1);
+      send(spenderAddress, amountBN);
+    }}>
+    {state.status == 'Mining' ? 'Mining...' : (approved ? 'Approved' : 'Approve')}
+  </Button>;
+};

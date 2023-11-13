@@ -19,5 +19,5 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: ${{ matrix.node-version }}
-      - run: cd hardhat; npm install
-      - run: cd hardhat; npm run test
+      - run: npm install
+      - run: npm run test
