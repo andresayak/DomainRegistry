@@ -270,6 +270,7 @@ contract DomainRegistry is OwnableUpgradeable {
     /// @param _additionalPrice The new additional price for domain registration.
     function changeAdditionPrice(string memory _domain, uint _additionalPrice) external {
         _domain = Utils.clearDomain(_domain);
+        _validateDomainOwner(_domain);
         require(!_onlyFreeDomain(_domain), 'free domain');
         registryByName[_domain].additionalPrice = _additionalPrice;
 
